@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emperor Penguins: Master Lesson</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Roboto+Mono:ital,wght@1,500&display=swap');
+
+        :root {
+            --navy-blue: #0F1C2E;
+            --ice-blue: #A8DADC;
+            --button-orange: #E67E22;
+            --white: #FFFFFF;
+            --text-white: #FFFFFF;
+            --pos-purple: #BF40BF;
+            --font-title: 'Fredoka One', cursive;
+            --font-main: 'Noto Sans KR', sans-serif;
+            --font-pos: 'Roboto Mono', monospace;
+            --deep-mint: #B2DFDB;
+            --light-mint: #E0F2F1;
+            --info-blue: #3498DB;
+            --speaker-blue: #3498DB;
+            --highlight-color: #B3E5FC;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: var(--font-main); 
+            background-color: var(--navy-blue); 
+            overflow: hidden; 
+            height: 100vh; 
+            color: var(--white); 
+        }
+
+        /* --- Global App Layout --- */
+        .app-section {
+            display: none; /* 기본적으로 숨김 */
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            animation: fadeInSection 0.5s ease-out;
+            padding: clamp(10px, 2vh, 20px);
+        }
+
+        .app-section.active-section {
+            display: flex; /* 활성화된 섹션만 보임 */
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes fadeInSection {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- Audio Playing Animation --- */
+        @keyframes audio-pulse {
+            0% { transform: scale(1); text-shadow: 0 0 5px rgba(230, 126, 34, 0.4); }
+            50% { transform: scale(1.2); color: #FF5722; text-shadow: 0 0 15px rgba(255, 87, 34, 0.8); }
+            100% { transform: scale(1); text-shadow: 0 0 5px rgba(230, 126, 34, 0.4); }
+        }
+        
+        .playing-effect {
+            animation: audio-pulse 1.2s infinite ease-in-out;
+            color: #FF5722 !important; 
+        }
+
+        /* --- SECTION 1: TITLE CSS --- */
+        #section1 {
+            background: linear-gradient(90deg, rgba(15,28,46,1) 40%, rgba(15,28,46,0.3) 100%);
+            align-items: flex-start;
+            padding-left: 10%;
+            justify-content: center;
+            padding-top: 0; padding-bottom: 0;
+        }
+        #s1-background-image {
+            position: absolute;
+            top: 0; right: 0;
+            width: 75%; height: 100%;
+            background: url('resource/title.png') no-repeat right center / contain;
+            z-index: 1;
+            mask-image: linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0));
+        }
+        #s1-title-overlay { position: relative; z-index: 10; max-width: 700px; }
+        .s1-main-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: var(--text-white);
+            line-height: 0.9;
+            text-shadow: 0 0 30px rgba(168, 218, 220, 0.3);
+            margin-bottom: 15px;
+            animation: slideUpFade 1.2s ease-out forwards;
+        }
+        .s1-subtitle {
+            font-size: clamp(1.5rem, 4vw, 2.8rem);
+            font-weight: 900; color: var(--ice-blue);
+            letter-spacing: 2px; text-transform: uppercase;
+            margin-bottom: 50px;
+            animation: slideUpFade 1.2s ease-out forwards 0.6s;
+            text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.6);
+        }
+        .s1-start-button {
+            padding: 22px 80px; font-size: 1.5rem; font-weight: 700;
+            border-radius: 50px; border: none; background: var(--button-orange);
+            color: white; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(230, 126, 34, 0.4);
+            transition: all 0.3s ease;
+            animation: slideUpFade 1.2s ease-out forwards 1.2s, pulse 2s infinite 2.4s;
+        }
+        .s1-start-button:hover {
+            background: #F39C12; transform: scale(1.08) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(243, 156, 18, 0.5);
+        }
+
+        /* --- SECTION 2: GETTING READY CSS --- */
+        #section2 .slide { 
+            position: absolute; width: 100%; height: 100%; 
+            display: none; flex-direction: column; align-items: center; padding: 40px; 
+            transition: opacity 0.5s ease;
+            background: radial-gradient(circle at top left, #1a2e44, var(--navy-blue));
+            overflow-y: auto;
+        }
+        #section2 .slide.active { display: flex; }
+        
+        .corner-title { 
+            font-family: var(--font-title); font-size: clamp(2.5rem, 4vw, 3.5rem); 
+            color: var(--white); margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(168, 218, 220, 0.3);
+            text-align: center;
+        }
+        .s2-video-wrapper {
+            width: 90%; max-width: 850px; 
+            background: rgba(255, 255, 255, 0.05); border-radius: 30px; padding: 20px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(168, 218, 220, 0.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center;
+        }
+        .s2-video-box {
+            width: 100%; height: auto; aspect-ratio: 16/9; background: #000;
+            border-radius: 20px; overflow: hidden; position: relative; cursor: pointer;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        .s2-overlay-play {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; background: rgba(0,0,0,0.6);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 2.5rem; transition: 0.3s; pointer-events: none;
+        }
+        .s2-video-box:hover .s2-overlay-play { background: rgba(230, 126, 34, 0.9); transform: translate(-50%, -50%) scale(1.1); }
+        .s2-video-box.playing .s2-overlay-play { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        
+        #s2-mainVideo { width: 100%; height: 100%; object-fit: contain; }
+        .s2-video-controls { margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;}
+        .s2-v-btn { 
+            padding: 12px 25px; border-radius: 50px; border: none; cursor: pointer; 
+            font-weight: bold; font-size: 1rem; transition: all 0.3s;
+            display: flex; align-items: center; gap: 10px; text-transform: uppercase;
+            min-width: 120px; justify-content: center;
+        }
+        .s2-v-btn.main-control { background-color: var(--button-orange); color: white; width: 160px;}
+        .s2-v-btn.main-control:hover { background-color: #d35400; transform: translateY(-2px); }
+        .s2-v-btn.replay-control { background-color: #95a5a6; color: white; }
+        .s2-v-btn.replay-control:hover { background-color: #7f8c8d; }
+        
+        .s2-split-container { 
+            display: flex; width: 95%; max-width: 1100px; height: 60vh; 
+            background: rgba(255, 255, 255, 0.03); border-radius: 30px; overflow: hidden; 
+            border: 1px solid rgba(168, 218, 220, 0.1);
+        }
+        .s2-left-img { 
+            flex: 1; 
+            background: url('resource/egg01.png') no-repeat center center / contain; 
+            background-color: rgba(255, 255, 255, 0.02); min-height: 200px;
+        }
+        .s2-right-q { flex: 1.3; padding: 30px; background: rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; justify-content: center; overflow-y: auto;}
+        .s2-q-item { 
+            display: flex; align-items: flex-start; background: rgba(255, 255, 255, 0.05); 
+            padding: 15px; border-radius: 20px; margin-bottom: 15px; transition: 0.3s;
+        }
+        .s2-q-speaker { font-size: 1.4rem; color: var(--ice-blue); cursor: pointer; margin-right: 15px; margin-top: 2px; flex-shrink: 0; transition: transform 0.2s; }
+        .s2-q-text { font-size: clamp(1rem, 1.2vw, 1.15rem); line-height: 1.4; color: #e0e0e0; font-weight: 300; text-align: left;}
+
+        /* --- SECTION 3: NEW WORDS CSS --- */
+        #section3 {
+            background: radial-gradient(circle at top left, #1a2e44, var(--navy-blue));
+            padding: clamp(15px, 3vh, 40px);
+        }
+        #section3 .slide { display: none; width: 100%; max-width: 1100px; flex-direction: column; height: 75vh; }
+        #section3 .slide.active { display: flex; }
+
+        .s3-scroll-area { overflow-y: auto; padding-right: 10px; }
+
+        .s3-vocab-item {
+            background: #FFFFFF; padding: clamp(12px, 2vh, 20px) clamp(15px, 2.5vw, 30px);
+            border-radius: 15px; display: flex; align-items: center; flex-wrap: wrap;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border-left: clamp(5px, 0.8vw, 10px) solid var(--ice-blue); margin-bottom: 15px;
+            gap: 10px;
+        }
+        .speaker-btn {
+            color:var(--button-orange); font-size:1.5rem; margin-right:20px; cursor:pointer;
+            transition: transform 0.2s;
+        }
+        .s3-word-text { font-size: clamp(1.4rem, 2.1vw, 1.8rem); color: var(--navy-blue); font-weight: 700; min-width: clamp(120px, 15vw, 200px); }
+        .s3-pos-text { font-family: var(--font-pos); color: var(--pos-purple); font-style: italic; margin-right: 15px; min-width: 40px; }
+        .s3-def-text { font-size: clamp(1rem, 1.4vw, 1.25rem); color: #333; font-weight: 500; flex: 1; margin-right: 15px; min-width: 200px; }
+        .s3-kor-hint-box {
+            background-color: var(--ice-blue); color: var(--navy-blue);
+            padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; min-width: 80px; text-align: center;
+        }
+        .s3-kor-hint-box .kor-text { display: none; }
+        .s3-kor-hint-box.revealed { background-color: #f1f9f9; border: 1px solid var(--ice-blue); }
+        .s3-kor-hint-box.revealed .kor-text { display: inline; }
+        .s3-kor-hint-box.revealed .q-mark { display: none; }
+        
+        /* --- SECTION 4: WORDS GAME CSS --- */
+        #section4 {
+            background: linear-gradient(135deg, var(--deep-mint) 0%, var(--light-mint) 100%);
+        }
+        .s4-timer-box { 
+            position: absolute; right: 20px; top: 10px;
+            background: white; padding: 10px 25px; border-radius: 50px; 
+            border: 3px solid var(--button-orange); font-family: var(--font-title); 
+            font-size: 1.8rem; color: var(--button-orange); display: flex; align-items: center; gap: 10px;
+            z-index: 20;
+        }
+        .s4-game-main { 
+            width: 100%; display: flex; flex-direction: column; align-items: center; flex-grow: 1;
+            position: relative; 
+        }
+        .s4-question-box {
+            width: 85%; max-width: 850px; min-height: 140px; 
+            background: white; border-radius: 30px; border: 6px solid var(--ice-blue); 
+            display: flex; align-items: center; justify-content: center; padding: 30px;
+            font-size: clamp(1.4rem, 2.5vw, 2.1rem); font-weight: 700; color: var(--navy-blue); 
+            text-align: center; line-height: 1.3; z-index: 10; margin-top: 20px;
+            position: relative;
+        }
+        .s4-stage { 
+            position: relative; width: 100%; flex-grow: 1; overflow: hidden; 
+            min-height: 400px; /* 최소 높이 확보 */
+        }
+        .s4-word-balloon {
+            position: absolute; bottom: -100px; padding: clamp(10px, 2vh, 22px) clamp(20px, 3vw, 55px);
+            background: var(--ice-blue); color: var(--navy-blue); border-radius: 60px;
+            font-size: clamp(1.2rem, 2vw, 1.8rem); font-weight: bold; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 3px solid white; 
+            transition: 0.3s; 
+            z-index: 15;
+        }
+        .s4-word-balloon:hover { transform: scale(1.1); background: var(--navy-blue); color: white; }
+        @keyframes floatUp { from { bottom: -100px; } to { bottom: 115%; } }
+        
+        /* Report Screen (Shared Style) */
+        .report-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--deep-mint) 0%, var(--light-mint) 100%); 
+            z-index: 1000; display: none; flex-direction: column; align-items: center; padding: 50px; justify-content: center;
+        }
+        .report-card { 
+             background: white; width: 95%; max-width: 1200px; padding: 30px; 
+             border-radius: 30px; margin-bottom: 30px; overflow-y: auto; max-height: 70vh;
+        }
+        .result-table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; }
+        .result-table th { background: var(--navy-blue); color: white; padding: 15px; text-align: left;}
+        .result-table td { padding: 15px; border-bottom: 1px solid #eee; color: #444; font-size: 1rem;}
+        .result-table tr:last-child td { border-bottom: none; }
+
+        /* --- SECTION 5: READING PASSAGE CSS --- */
+        #section5 {
+            background: radial-gradient(circle at top left, #1a2e44, var(--navy-blue));
+            padding: clamp(30px, 5vh, 60px) 40px; 
+        }
+        .s5-passage-box {
+            width: 90%; max-width: 1050px; height: 55vh; 
+            background: rgba(255, 255, 255, 0.03); padding: clamp(20px, 4vw, 40px);
+            border-radius: 35px; backdrop-filter: blur(10px);
+            border: 1px solid rgba(168, 218, 220, 0.08);
+            line-height: 2.0; font-size: clamp(1rem, 1.3rem, 1.5rem); color: #f0f0f0;
+            overflow-y: auto; 
+        }
+        .s5-passage-box p { margin-bottom: 25px; text-indent: 1.5em; font-weight: 700; text-align: justify; }
+
+        /* --- SECTION 6: PASSAGE STUDY CSS --- */
+        #section6 { background: radial-gradient(circle at top left, #1a2e44, var(--navy-blue)); }
+        #section6 .slide { display: none; width: 95%; max-width: 1300px; height: 72vh; grid-template-columns: 1.1fr 1fr; gap: 20px; }
+        #section6 .slide.active { display: grid; }
+        .s6-english-box {
+            background: rgba(255, 255, 255, 0.98); color: #1a1a1a;
+            padding: 30px; border-radius: 25px; font-size: clamp(1.1rem, 1.4vw, 1.4rem); line-height: 1.9; overflow-y: auto;
+            position: relative; text-indent: 40px;
+        }
+        .s6-point-box { background: #FFFFFF; color: #333; padding: 20px; border-radius: 20px; flex: 1.5; overflow-y: auto; }
+        .s6-translation-box {
+            background: rgba(168, 218, 220, 0.15); padding: 15px 25px; border-radius: 20px;
+            flex: 0.5; font-size: clamp(0.9rem, 1.1rem, 1.2rem); color: var(--ice-blue); line-height: 1.7; overflow-y: auto;
+        }
+        .hl { transition: background-color 0.2s; cursor: help; border-radius: 4px; padding: 0 4px; }
+        .hl:hover { background-color: var(--highlight-color); }
+
+        /* --- SECTION 7: COMPREHENSION CSS --- */
+        #section7 { background: radial-gradient(circle at top left, #1a2e44, var(--navy-blue)); }
+        .s7-main-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; width: 95%; max-width: 1250px; height: 68vh; }
+        .s7-passage-display { background: rgba(255, 255, 255, 0.98); color: #1a1a1a; padding: 35px; border-radius: 25px; font-size: 1.1rem; line-height: 1.8; overflow-y: auto; }
+        .s7-quiz-area { background: #FFFFFF; color: #333; padding: 35px; border-radius: 25px; display: flex; flex-direction: column; overflow: hidden; position: relative;}
+        .s7-quiz-slide { display: none; flex-direction: column; width: 100%; height: 100%; overflow-y: auto;}
+        .s7-quiz-slide.active { display: flex; }
+        .s7-option-btn { width: 100%; padding: 14px 20px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 12px; background: #fdfdfd; cursor: pointer; text-align: left; transition: 0.2s; }
+        .s7-option-btn:hover { border-color: var(--button-orange); background: #fff7f0; }
+        .s7-option-btn.selected { background: var(--ice-blue); border-color: var(--navy-blue); font-weight: bold; }
+        .s7-nav-box { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; width: 100%; }
+        .s7-nav-box .next-btn, .s7-nav-box .nav-btn { position: static; transform: none; }
+        .s7-nav-box .next-btn:hover, .s7-nav-box .nav-btn:hover { transform: translateY(-3px); }
+
+        /* Common Components */
+        .instruction {
+            color: var(--ice-blue); font-size: clamp(1rem, 1.3vw, 1.3rem); font-weight: 700; 
+            border-left: 5px solid var(--button-orange); padding-left: 15px; margin: 10px 0 20px 0;
+            text-align: left; width: 100%; max-width: 1250px;
+        }
+        .next-btn, .nav-btn {
+            position: absolute; bottom: clamp(20px, 4vh, 40px); right: clamp(20px, 5vw, 80px);
+            padding: 15px 40px; background: var(--button-orange); color: white;
+            border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
+            transition: 0.3s; z-index: 100; display: flex; align-items: center; gap: 10px;
+        }
+        .next-btn:hover, .nav-btn:hover { transform: translateY(-5px); background: #f39c12; }
+        
+        .header-area { width: 95%; max-width: 1250px; margin-bottom: 10px; text-align: center; display: flex; flex-direction: column; align-items: center;}
+
+        /* Animation Keyframes */
+        @keyframes slideUpFade { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(230, 126, 34, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0); }
+        }
+
+        /* --- RESPONSIVE DESIGN FOR SMALLER SCREENS --- */
+        @media (max-width: 1024px) {
+            /* Section 2: Split Container stacks vertically */
+            .s2-split-container {
+                flex-direction: column;
+                height: auto;
+                max-height: 65vh;
+            }
+            .s2-left-img { min-height: 150px; flex: 0 0 150px; }
+            .s2-right-q { flex: 1; padding: 20px; }
+            
+            /* Section 6: Grid becomes single column */
+            #section6 .slide {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                gap: 10px;
+            }
+            .s6-english-box { order: 1; }
+            .s6-point-box, .s6-translation-box { order: 2; }
+            
+            /* Section 7: Grid becomes single column */
+            .s7-main-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 0.8fr 1.2fr;
+                gap: 15px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .corner-title { font-size: 2rem; margin-bottom: 10px; }
+            .instruction { font-size: 1rem; margin: 5px 0 10px 0; }
+            .s2-split-container { height: 55vh; }
+            .s4-word-balloon { bottom: -80px; padding: 8px 15px; font-size: 1rem; }
+        }
+        
+    </style>
+</head>
+<body>
+
+    <!-- ================= SECTION 1: TITLE ================= -->
+    <div id="section1" class="app-section active-section">
+        <div id="s1-background-image"></div>
+        <div id="s1-title-overlay">
+            <h1 class="s1-main-title">EMPEROR<br>PENGUINS</h1>
+            <h2 class="s1-subtitle">Dedicated Parents</h2>
+            <button class="s1-start-button" onclick="goToSection(2)">
+                START LESSON <i class="fas fa-chevron-right" style="margin-left:12px;"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= SECTION 2: GETTING READY ================= -->
+    <div id="section2" class="app-section">
+        <div id="s2-slide1" class="slide active">
+            <h1 class="corner-title">Getting Ready to Read</h1>
+            <div class="s2-video-wrapper">
+                <div class="s2-video-box" onclick="s2_toggleVideo()">
+                    <video id="s2-mainVideo" preload="auto">
+                        <source src="resource/intro video.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <!-- CENTER PLAY OVERLAY -->
+                    <div class="s2-overlay-play"><i class="fas fa-play"></i></div>
+                </div>
+                <!-- NEW BUTTON LAYOUT -->
+                <div class="s2-video-controls">
+                    <button class="s2-v-btn replay-control" onclick="s2_replayVideo()">
+                        <i class="fas fa-redo"></i> Replay
+                    </button>
+                    <button id="s2-playBtn" class="s2-v-btn main-control" onclick="s2_toggleVideo()">
+                        <i class="fas fa-play"></i> <span>Play</span>
+                    </button>
+                </div>
+            </div>
+            <button class="next-btn" onclick="s2_showSlide(2)">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div id="s2-slide2" class="slide">
+            <h1 class="corner-title">Getting Ready to Read</h1>
+            <div class="s2-split-container">
+                <div class="s2-left-img"></div> 
+                <div class="s2-right-q">
+                    <div class="instruction">Think about the questions and answer.</div>
+                    <div class="s2-q-item">
+                        <i class="fas fa-volume-up s2-q-speaker" onclick="s2_playQ(1, this)"></i>
+                        <span class="s2-q-text">1. Do you like winter? Why or why not?</span>
+                    </div>
+                    <div class="s2-q-item">
+                        <i class="fas fa-volume-up s2-q-speaker" onclick="s2_playQ(2, this)"></i>
+                        <span class="s2-q-text">2. Describe the coldest weather you have ever experienced. How did you stay warm in that weather?</span>
+                    </div>
+                    <div class="s2-q-item">
+                        <i class="fas fa-volume-up s2-q-speaker" onclick="s2_playQ(3, this)"></i>
+                        <span class="s2-q-text">3. Look at the picture. What is the penguin carrying? Why do you think it is doing that?</span>
+                    </div>
+                </div>
+            </div>
+            <button class="next-btn" onclick="goToSection(3)">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+        <audio id="s2-audio1" src="resource/Q 01.mp3" onerror="alert('오디오 파일을 찾을 수 없습니다: resource/Q 01.mp3')"></audio>
+        <audio id="s2-audio2" src="resource/Q 02.mp3" onerror="alert('오디오 파일을 찾을 수 없습니다: resource/Q 02.mp3')"></audio>
+        <audio id="s2-audio3" src="resource/Q 03.mp3" onerror="alert('오디오 파일을 찾을 수 없습니다: resource/Q 03.mp3')"></audio>
+    </div>
+
+    <!-- ================= SECTION 3: NEW WORDS ================= -->
+    <div id="section3" class="app-section">
+        <div class="header-area">
+            <h1 class="corner-title">New Words</h1>
+            <div class="instruction">Read the words and their meanings carefully. Click the boxes for Korean.</div>
+        </div>
+
+        <div id="s3-slide1" class="slide active">
+            <div class="s3-scroll-area">
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('emperor.mp3', this)"></i>
+                    <span class="s3-word-text">emperor</span><span class="s3-pos-text">n.</span><span class="s3-def-text">a man who rules an empire</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">황제</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('adult.mp3', this)"></i>
+                    <span class="s3-word-text">adult</span><span class="s3-pos-text">n.</span><span class="s3-def-text">a fully-grown person or animal</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">성인</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('dedicated.mp3', this)"></i>
+                    <span class="s3-word-text">dedicated</span><span class="s3-pos-text">a.</span><span class="s3-def-text">used for only one particular purpose</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">전용의, 헌신적인</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('journey.mp3', this)"></i>
+                    <span class="s3-word-text">journey</span><span class="s3-pos-text">n.</span><span class="s3-def-text">travelling from one place to another</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">여정, 여행</span></div>
+                </div>
+            </div>
+            <button class="next-btn" onclick="s3_moveSlide(2)">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div id="s3-slide2" class="slide">
+            <div class="s3-scroll-area">
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('fold.mp3', this)"></i>
+                    <span class="s3-word-text">fold</span><span class="s3-pos-text">n.</span><span class="s3-def-text">a line made in material, skin, etc.</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">주름</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('careful.mp3', this)"></i>
+                    <span class="s3-word-text">careful</span><span class="s3-pos-text">a.</span><span class="s3-def-text">trying to avoid damaging something</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">주의 깊은</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('freeze.mp3', this)"></i>
+                    <span class="s3-word-text">freeze</span><span class="s3-pos-text">v.</span><span class="s3-def-text">to become solid by cold</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">얼다</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('hatch.mp3', this)"></i>
+                    <span class="s3-word-text">hatch</span><span class="s3-pos-text">v.</span><span class="s3-def-text">to come out of an egg</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">부화하다</span></div>
+                </div>
+            </div>
+            <button class="nav-btn" style="left:20px; right:auto; background:rgba(255,255,255,0.1); border:1px solid #A8DADC;" onclick="s3_moveSlide(1)"><i class="fas fa-chevron-left"></i> Back</button>
+            <button class="next-btn" onclick="s3_moveSlide(3)">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div id="s3-slide3" class="slide">
+            <div class="s3-scroll-area">
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('temperature.mp3', this)"></i>
+                    <span class="s3-word-text">temperature</span><span class="s3-pos-text">n.</span><span class="s3-def-text">degree of how hot or cold a thing is</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">온도</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('below.mp3', this)"></i>
+                    <span class="s3-word-text">below</span><span class="s3-pos-text">prep.</span><span class="s3-def-text">in or to a lower place</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">~아래에</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('survive.mp3', this)"></i>
+                    <span class="s3-word-text">survive</span><span class="s3-pos-text">v.</span><span class="s3-def-text">to remain alive</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">살아남다</span></div>
+                </div>
+                <div class="s3-vocab-item">
+                    <i class="fas fa-volume-up speaker-btn" onclick="s3_playWord('independent.mp3', this)"></i>
+                    <span class="s3-word-text">independent</span><span class="s3-pos-text">a.</span><span class="s3-def-text">able to do things by yourself</span>
+                    <div class="s3-kor-hint-box" onclick="s3_toggleHint(this)"><span class="q-mark">?</span><span class="kor-text">독립적인</span></div>
+                </div>
+            </div>
+            <button class="nav-btn" style="left:20px; right:auto; background:rgba(255,255,255,0.1); border:1px solid #A8DADC;" onclick="s3_moveSlide(2)"><i class="fas fa-chevron-left"></i> Back</button>
+            <button class="next-btn" onclick="goToSection(4)">Check Words <i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <!-- ================= SECTION 4: WORDS GAME ================= -->
+    <div id="section4" class="app-section">
+        <div class="header-area">
+            <h1 class="corner-title" style="color: var(--navy-blue);">Words Game</h1>
+            <div class="instruction" style="color:var(--navy-blue);">Read the meanings and find the matching words.</div>
+            <div class="s4-timer-box">
+                <i class="fas fa-clock"></i> <span id="s4-timer-sec">6</span>s
+            </div>
+        </div>
+
+        <div class="s4-game-main">
+            <div class="s4-question-box" id="s4-question">Loading Game...</div>
+            <div class="s4-stage" id="s4-stage">
+                <div id="s4-o-mark" style="position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); font-size:10rem; color:#2ecc71; display:none; z-index: 100;"><i class="far fa-circle"></i></div>
+                <div id="s4-x-mark" style="position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); font-size:10rem; color:#e74c3c; display:none; z-index: 100;"><i class="fas fa-times"></i></div>
+            </div>
+        </div>
+
+        <div id="s4-result-screen" class="report-screen">
+            <h1 class="corner-title" style="color: var(--navy-blue);">Game Report</h1>
+            <div class="instruction" style="color: var(--info-blue);">Check the missing words.</div>
+            <div class="report-card">
+                <table class="result-table">
+                    <thead><tr><th width="20%">Word</th><th width="50%">Meaning</th><th width="30%">Korean</th></tr></thead>
+                    <tbody id="s4-wrong-list"></tbody>
+                </table>
+            </div>
+            <div style="display:flex; gap:20px;">
+                <button onclick="s4_resetGame()" style="padding:15px 40px; border-radius:50px; border:none; background:#BDC3C7; font-weight:bold; cursor:pointer;">Retry</button>
+                <button onclick="goToSection(5)" style="padding:15px 50px; border-radius:50px; border:none; background:var(--button-orange); color:white; font-weight:bold; cursor:pointer;">Next Stage</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SECTION 5: READING PASSAGE ================= -->
+    <div id="section5" class="app-section">
+        <div class="header-area" style="display:flex; align-items:center; gap:20px;">
+            <h1 class="corner-title">Reading Passage</h1>
+            <div id="s5-speaker-btn" onclick="s5_toggleAudio()" style="font-size:1.6rem; color:var(--ice-blue); cursor:pointer; background:rgba(255,255,255,0.1); width:55px; height:55px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid rgba(168,218,220,0.2);">
+                <i class="fas fa-volume-up"></i>
+            </div>
+        </div>
+        <div class="instruction">Read the passage.</div>
+
+        <div class="s5-passage-box">
+            <p>Emperor penguins are the world’s largest penguins. Adult emperor penguins can stand over 1 meter tall. But to grow this tall from an egg, Emperor Penguins need a lot of dedicated work from their parents.</p>
+            <p>Every winter, each mother penguin lays just one egg. The mother passes the egg to the father. Then she goes on a long journey to the ocean to find food. The father puts the egg on his feet. He covers it with a special skin fold. This is called a brood pouch. He has to be very careful. The egg will freeze within minutes if it touches the icy ground.</p>
+            <p>The father stands still in the freezing cold for two months until the egg hatches. The egg is kept warm in the brood pouch at about 38 °C. Outside temperatures in Antarctica can drop below −35 °C. To endure the cold, fathers form a tight "huddle" and share their body heat. During this time, the father doesn’t eat anything. He uses his body fat to survive.</p>
+            <p>Finally, the egg hatches. The mother returns with food for the chick. The chick is very small. It weighs only about 150 g to 200 g. The parents take turns feeding and caring for their chick until it’s big enough to be independent.</p>
+        </div>
+        <button class="next-btn" onclick="goToSection(6)">Next <i class="fas fa-chevron-right"></i></button>
+        <audio id="s5-audio" src="resource/Reading Passage_Whole_male.mp3" onerror="alert('오디오 파일을 찾을 수 없습니다: resource/Reading Passage_Whole_male.mp3')"></audio>
+    </div>
+
+    <!-- ================= SECTION 6: PASSAGE STUDY (UPDATED FULL VERSION) ================= -->
+    <div id="section6" class="app-section">
+        <div class="header-area">
+            <h1 class="corner-title">Passage Study</h1>
+            <div class="instruction">Let’s analyze the sentences and structures.</div>
+        </div>
+
+        <div id="s6-slide1" class="slide active">
+            <div class="s6-english-box">
+                <i class="fas fa-volume-up" style="position:absolute; top:20px; right:20px; color:var(--speaker-blue); cursor:pointer;" onclick="s6_playAudio(1, this)"></i>
+                <span class="hl">Emperor penguins</span> are the world’s <span class="hl">largest</span> penguins. Adult emperor penguins can <span class="hl">stand</span> over 1 meter tall. But <span class="hl">to grow</span> this tall from an egg, Emperor Penguins need <span class="hl">a lot of</span> dedicated work from their parents.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div class="s6-point-box">
+                    <h3><i class="fas fa-search-plus"></i> Study Points</h3>
+                    <div style="margin-bottom:10px;"><b>Emperor Penguin</b>: 황제 펭귄</div>
+                    <div style="margin-bottom:10px;"><b>최상급</b>: the + (e)st / 가장 ~한</div>
+                    <div style="margin-bottom:10px;"><b>stand</b>: (키가) …이다</div>
+                    <div style="margin-bottom:10px;"><b>to grow</b>: 자라기 위해서 (목적)</div>
+                    <div style="margin-bottom:10px;"><b>a lot of</b>: 많은 (= lots of)</div>
+                </div>
+                <div class="s6-translation-box">황제펭귄은 세계에서 가장 큰 펭귄입니다. 성체 황제펭귄은 키가 1미터 이상일 수 있습니다. 하지만 알에서 이만큼 자라기 위해서, 황제펭귄은 부모의 많은 헌신적인 노력이 필요합니다.</div>
+            </div>
+            <button class="next-btn" onclick="s6_moveSlide(2)">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div id="s6-slide2" class="slide">
+            <div class="s6-english-box">
+                <i class="fas fa-volume-up" style="position:absolute; top:20px; right:20px; color:var(--speaker-blue); cursor:pointer;" onclick="s6_playAudio(2, this)"></i>
+                Every winter, each mother penguin <span class="hl">lays just one egg</span>. The mother passes the egg to the father. Then she <span class="hl">goes on a long journey to</span> the ocean to find food. The father puts the egg on his feet. He covers it with a <span class="hl">special skin fold</span>. This is called a <span class="hl">brood pouch</span>. He has to be very careful. The egg will freeze within minutes if it touches the icy ground.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div class="s6-point-box">
+                    <h3><i class="fas fa-search-plus"></i> Study Points</h3>
+                    <div><b>lay an egg</b>: 알을 낳다</div>
+                    <div><b>go on a long journey</b>: 긴 여정을 떠나다</div>
+                    <div><b>special skin fold</b>: 특별한 피부 주름</div>
+                    <div><b>brood pouch</b>: 육아낭 (알을 품는 주머니)</div>
+                </div>
+                <div class="s6-translation-box">매년 겨울, 각각의 어미 펭귄은 단 하나의 알을 낳습니다. 어미는 알을 아빠에게 건네주고, 먹이를 찾으러 바다로 긴 여정을 떠납니다. 아빠는 알을 발 위에 올려놓습니다. 그는 특별한 피부 주름으로 알을 덮는데, 이것을 육아낭이라고 합니다. 그는 매우 조심해야 합니다. 알이 얼음 땅에 닿으면 몇 분 안에 얼어버릴 것입니다.</div>
+            </div>
+            <button class="nav-btn" style="left:20px; right:auto; background:rgba(255,255,255,0.1); border:1px solid #A8DADC;" onclick="s6_moveSlide(1)">Back</button>
+            <button class="next-btn" onclick="s6_moveSlide(3)">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div id="s6-slide3" class="slide">
+            <div class="s6-english-box">
+                <i class="fas fa-volume-up" style="position:absolute; top:20px; right:20px; color:var(--speaker-blue); cursor:pointer;" onclick="s6_playAudio(3, this)"></i>
+                The father stands still in the freezing cold for two months <span class="hl">until</span> the egg hatches. The egg is <span class="hl">kept warm</span> in the brood pouch at about 38 °C. Outside temperatures in Antarctica can drop <span class="hl">below</span> −35 °C. To <span class="hl">endure</span> the cold, fathers form a tight "huddle" and share their body heat. During this time, the father doesn’t eat anything. He uses his body fat to survive.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div class="s6-point-box">
+                    <h3><i class="fas fa-search-plus"></i> Study Points</h3>
+                    <div><b>until</b>: ~할 때까지</div>
+                    <div><b>be kept warm</b>: 따뜻하게 유지되다 (수동태)</div>
+                    <div><b>below</b>: ~ 아래로</div>
+                    <div><b>endure</b>: 견디다</div>
+                </div>
+                <div class="s6-translation-box">아빠는 알이 부화할 때까지 두 달 동안 혹독한 추위 속에 가만히 서 있습니다. 알은 육아낭 안에서 약 38°C로 따뜻하게 유지됩니다. 남극의 외부 기온은 영하 35°C 아래로 떨어질 수 있습니다. 추위를 견디기 위해 아빠들은 꽉 뭉쳐서(huddle) 체온을 나눕니다. 이 기간 동안 아빠는 아무것도 먹지 않고, 생존을 위해 체지방을 사용합니다.</div>
+            </div>
+            <button class="nav-btn" style="left:20px; right:auto; background:rgba(255,255,255,0.1); border:1px solid #A8DADC;" onclick="s6_moveSlide(2)">Back</button>
+            <button class="next-btn" onclick="s6_moveSlide(4)">Next <i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div id="s6-slide4" class="slide">
+            <div class="s6-english-box">
+                <i class="fas fa-volume-up" style="position:absolute; top:20px; right:20px; color:var(--speaker-blue); cursor:pointer;" onclick="s6_playAudio(4, this)"></i>
+                Finally, the egg hatches. The mother <span class="hl">returns with</span> food for the chick. The chick is very small. It <span class="hl">weighs</span> only about 150 g to 200 g. The parents <span class="hl">take turns feeding</span> and <span class="hl">caring for</span> their chick <span class="hl">until</span> it’s big enough to be independent.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div class="s6-point-box">
+                    <h3><i class="fas fa-search-plus"></i> Study Points</h3>
+                    <div><b>return with</b>: ~을 가지고 돌아오다</div>
+                    <div><b>weigh</b>: 무게가 ~이다</div>
+                    <div><b>take turns ~ing</b>: 교대로 ~하다</div>
+                    <div><b>care for</b>: ~을 돌보다</div>
+                </div>
+                <div class="s6-translation-box">마침내 알이 부화합니다. 엄마는 새끼를 위한 먹이를 가지고 돌아옵니다. 새끼는 매우 작아서 무게가 약 150g에서 200g 정도밖에 되지 않습니다. 부모는 새끼가 독립할 수 있을 만큼 클 때까지 교대로 먹이를 주고 돌봅니다.</div>
+            </div>
+            <button class="nav-btn" style="left:20px; right:auto; background:rgba(255,255,255,0.1); border:1px solid #A8DADC;" onclick="s6_moveSlide(3)">Back</button>
+            <button class="next-btn" onclick="goToSection(7)">Finish <i class="fas fa-check"></i></button>
+        </div>
+    </div>
+
+    <!-- ================= SECTION 7: COMPREHENSION (UPDATED FULL VERSION) ================= -->
+    <div id="section7" class="app-section">
+        <div class="header-area">
+            <h1 class="corner-title">Reading Comprehension</h1>
+            <div class="instruction">Read and answer the questions based on the passage.</div>
+        </div>
+
+        <div class="s7-main-layout">
+            <div class="s7-passage-display">
+                <p>Emperor penguins are the world’s largest penguins. Adult emperor penguins can stand over 1 meter tall. But to grow this tall from an egg, Emperor Penguins need a lot of dedicated work from their parents.</p>
+                <p>Every winter, each mother penguin lays just one egg. The mother passes the egg to the father. Then she goes on a long journey to the ocean to find food. The father puts the egg on his feet. He covers it with a special skin fold. This is called a brood pouch. He has to be very careful. The egg will freeze within minutes if it touches the icy ground.</p>
+                <p>The father stands still in the freezing cold for two months until the egg hatches. The egg is kept warm in the brood pouch at about 38 °C. Outside temperatures in Antarctica can drop below −35 °C. To endure the cold, fathers form a tight "huddle" and share their body heat. During this time, the father doesn’t eat anything. He uses his body fat to survive.</p>
+                <p>Finally, the egg hatches. The mother returns with food for the chick. The chick is very small. It weighs only about 150 g to 200 g. The parents take turns feeding and caring for their chick until it’s big enough to be independent.</p>
+            </div>
+
+            <div class="s7-quiz-area">
+                <!-- Q1 -->
+                <div id="s7-q1" class="s7-quiz-slide active">
+                    <div class="question-text">1. What is the passage mainly about?</div>
+                    <button class="s7-option-btn" onclick="s7_select(1, 1)">ⓐ the long life of emperor penguins</button>
+                    <button class="s7-option-btn" onclick="s7_select(1, 2)">ⓑ how emperor penguins raise their young</button>
+                    <button class="s7-option-btn" onclick="s7_select(1, 3)">ⓒ why emperor penguins grow so tall</button>
+                    <button class="s7-option-btn" onclick="s7_select(1, 4)">ⓓ different types of penguins</button>
+                    <div class="s7-nav-box">
+                        <button class="next-btn" onclick="s7_go(2)">Next</button>
+                    </div>
+                </div>
+                <!-- Q2 -->
+                <div id="s7-q2" class="s7-quiz-slide">
+                    <div class="question-text">2. How does an emperor penguin keep its egg warm?</div>
+                    <button class="s7-option-btn" onclick="s7_select(2, 1)">ⓐ by standing on it</button>
+                    <button class="s7-option-btn" onclick="s7_select(2, 2)">ⓑ by keeping it in a special pouch</button>
+                    <button class="s7-option-btn" onclick="s7_select(2, 3)">ⓒ by putting it under the ground</button>
+                    <button class="s7-option-btn" onclick="s7_select(2, 4)">ⓓ by taking it to the ocean</button>
+                    <div class="s7-nav-box">
+                        <button class="nav-btn" onclick="s7_go(1)">Back</button>
+                        <button class="next-btn" onclick="s7_go(3)">Next</button>
+                    </div>
+                </div>
+                <!-- Q3 -->
+                <div id="s7-q3" class="s7-quiz-slide">
+                    <div class="question-text">3. How long does the father stand in the cold?</div>
+                    <button class="s7-option-btn" onclick="s7_select(3, 1)">ⓐ for one week</button>
+                    <button class="s7-option-btn" onclick="s7_select(3, 2)">ⓑ for two months</button>
+                    <button class="s7-option-btn" onclick="s7_select(3, 3)">ⓒ for three days</button>
+                    <button class="s7-option-btn" onclick="s7_select(3, 4)">ⓓ for five hours</button>
+                    <div class="s7-nav-box">
+                        <button class="nav-btn" onclick="s7_go(2)">Back</button>
+                        <button class="next-btn" onclick="s7_go(4)">Next</button>
+                    </div>
+                </div>
+                <!-- Q4 -->
+                <div id="s7-q4" class="s7-quiz-slide">
+                    <div class="question-text">4. What is the meaning of 'independent'?</div>
+                    <button class="s7-option-btn" onclick="s7_select(4, 1)">ⓐ very strong</button>
+                    <button class="s7-option-btn" onclick="s7_select(4, 2)">ⓑ staying together</button>
+                    <button class="s7-option-btn" onclick="s7_select(4, 3)">ⓒ able to live on its own</button>
+                    <button class="s7-option-btn" onclick="s7_select(4, 4)">ⓓ extremely cold</button>
+                    <div class="s7-nav-box">
+                        <button class="nav-btn" onclick="s7_go(3)">Back</button>
+                        <button class="next-btn" onclick="s7_go(5)">Next</button>
+                    </div>
+                </div>
+                <!-- Q5 -->
+                <div id="s7-q5" class="s7-quiz-slide">
+                    <div class="question-text">5. Where does the mother go after laying the egg?</div>
+                    <button class="s7-option-btn" onclick="s7_select(5, 1)">ⓐ to the mountains</button>
+                    <button class="s7-option-btn" onclick="s7_select(5, 2)">ⓑ to the nest</button>
+                    <button class="s7-option-btn" onclick="s7_select(5, 3)">ⓒ to the ocean</button>
+                    <button class="s7-option-btn" onclick="s7_select(5, 4)">ⓓ to the forest</button>
+                    <div class="s7-nav-box">
+                        <button class="nav-btn" onclick="s7_go(4)">Back</button>
+                        <button class="next-btn" onclick="s7_go(6)">Next</button>
+                    </div>
+                </div>
+                <!-- Q6 -->
+                <div id="s7-q6" class="s7-quiz-slide">
+                    <div class="question-text">6. How much does the chick weigh?</div>
+                    <button class="s7-option-btn" onclick="s7_select(6, 1)">ⓐ 1kg to 2kg</button>
+                    <button class="s7-option-btn" onclick="s7_select(6, 2)">ⓑ 500g to 1kg</button>
+                    <button class="s7-option-btn" onclick="s7_select(6, 3)">ⓒ 150g to 200g</button>
+                    <button class="s7-option-btn" onclick="s7_select(6, 4)">ⓓ 10g to 50g</button>
+                    <div class="s7-nav-box">
+                        <button class="nav-btn" onclick="s7_go(5)">Back</button>
+                        <button class="next-btn" onclick="s7_checkResult()">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="s7-report-screen" class="report-screen">
+            <h1 class="corner-title" style="color:var(--navy-blue);">Comprehension Report</h1>
+            <p style="color:var(--info-blue); font-size:1.5rem; margin:20px;">Review your answers.</p>
+            <div class="report-card">
+                <table class="result-table">
+                    <thead>
+                        <tr><th style="width:5%">No</th><th style="width:40%">Question</th><th style="width:25%">Korean</th><th style="width:30%">Answer & Explanation</th></tr>
+                    </thead>
+                    <tbody style="display:table-row-group">
+                        <tr><td>1</td><td>What is the passage mainly about?</td><td>이 글은 주로 무엇에 관한 것인가요?</td><td><b>how emperor penguins raise their young</b><br>황제 펭귄이 어떻게 새끼를 기르는지에 대한 글입니다.</td></tr>
+                        <tr><td>2</td><td>How does an emperor penguin keep its egg warm?</td><td>황제 펭귄은 어떻게 알을 따뜻하게 유지하나요?</td><td><b>by keeping it in a special pouch</b><br>육아낭(brood pouch)에 넣어 따뜻하게 유지합니다.</td></tr>
+                        <tr><td>3</td><td>How long does the father stand in the cold?</td><td>아빠 펭귄은 얼마나 오랫동안 추위 속에 서 있나요?</td><td><b>for two months</b><br>아빠 펭귄은 알이 부화할 때까지 두 달간 서 있습니다.</td></tr>
+                        <tr><td>4</td><td>What is the meaning of 'independent'?</td><td>'independent'의 의미는 무엇인가요?</td><td><b>able to live on its own</b><br>남의 도움 없이 혼자서도 살아갈 수 있는 상태를 뜻합니다.</td></tr>
+                        <tr><td>5</td><td>Where does the mother go after laying the egg?</td><td>엄마 펭귄은 알을 낳고 어디로 가나요?</td><td><b>to the ocean</b><br>먹이를 찾으러 바다(ocean)로 긴 여정을 떠납니다.</td></tr>
+                        <tr><td>6</td><td>How much does the chick weigh?</td><td>새끼 펭귄의 무게는 얼마인가요?</td><td><b>150g to 200g</b><br>새끼 펭귄의 무게는 약 150g에서 200g 정도입니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="next-btn" onclick="alert('All Lessons Completed! Great Job!')" style="position:static; margin-top:30px;">Finish All</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Navigation Controller ---
+        function goToSection(sectionNum) {
+            stopAllMedia();
+            document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active-section'));
+            document.getElementById('section' + sectionNum).classList.add('active-section');
+            if (sectionNum === 4) { s4_initGame(); }
+        }
+
+        function stopAllMedia() {
+            s2_stopVideo();
+            ['s2-audio1', 's2-audio2', 's2-audio3'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) { el.pause(); el.currentTime = 0; }
+            });
+            const s5Audio = document.getElementById('s5-audio');
+            if(s5Audio) { s5Audio.pause(); s5Audio.currentTime = 0; }
+            s6_stopAudio();
+            document.querySelectorAll('.playing-effect').forEach(el => el.classList.remove('playing-effect'));
+        }
+
+        // --- Section 2 Logic ---
+        function s2_toggleVideo() {
+            const v = document.getElementById('s2-mainVideo');
+            const btn = document.getElementById('s2-playBtn');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            const box = document.querySelector('.s2-video-box');
+
+            if (v.paused) {
+                v.play();
+                icon.className = 'fas fa-pause';
+                text.innerText = 'Pause';
+                box.classList.add('playing');
+            } else {
+                v.pause();
+                icon.className = 'fas fa-play';
+                text.innerText = 'Play';
+                box.classList.remove('playing');
+            }
+        }
+        
+        function s2_replayVideo() {
+            const v = document.getElementById('s2-mainVideo');
+            v.currentTime = 0;
+            v.play();
+            const btn = document.getElementById('s2-playBtn');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            const box = document.querySelector('.s2-video-box');
+            icon.className = 'fas fa-pause';
+            text.innerText = 'Pause';
+            box.classList.add('playing');
+        }
+
+        function s2_stopVideo() { 
+            const v = document.getElementById('s2-mainVideo'); 
+            const btn = document.getElementById('s2-playBtn');
+            const box = document.querySelector('.s2-video-box');
+            if(v) { v.pause(); v.currentTime = 0; }
+            if(btn) { btn.querySelector('i').className = 'fas fa-play'; btn.querySelector('span').innerText = 'Play'; }
+            if(box) box.classList.remove('playing');
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const v = document.getElementById('s2-mainVideo');
+            if(v) {
+                v.onended = () => {
+                    document.querySelector('.s2-video-box').classList.remove('playing');
+                    const btn = document.getElementById('s2-playBtn');
+                    btn.querySelector('i').className = 'fas fa-play';
+                    btn.querySelector('span').innerText = 'Play';
+                };
+            }
+        });
+
+        function s2_showSlide(num) {
+            document.getElementById('s2-slide1').classList.remove('active');
+            document.getElementById('s2-slide2').classList.remove('active');
+            document.getElementById('s2-slide' + num).classList.add('active');
+            if(num === 2) s2_stopVideo();
+        }
+        function s2_playQ(num, btn) {
+            document.querySelectorAll('.s2-q-speaker').forEach(el => el.classList.remove('playing-effect'));
+            [1,2,3].forEach(i => {
+                const a = document.getElementById('s2-audio'+i);
+                if(a) { a.pause(); a.currentTime = 0; }
+            });
+            const t = document.getElementById('s2-audio'+num);
+            if(t) {
+                btn.classList.add('playing-effect');
+                t.play().catch(e=>alert("오디오 파일을 찾을 수 없습니다: resource/Q 0" + num + ".mp3"));
+                t.onended = () => btn.classList.remove('playing-effect');
+            }
+        }
+
+        // --- Section 3 Logic ---
+        let s3_currAudio = null;
+        function s3_playWord(file, btn) {
+            if(s3_currAudio) { s3_currAudio.pause(); s3_currAudio.currentTime = 0; }
+            document.querySelectorAll('.speaker-btn').forEach(el => el.classList.remove('playing-effect'));
+            btn.classList.add('playing-effect');
+            s3_currAudio = new Audio('resource/' + file);
+            s3_currAudio.play().catch(e=>alert("오디오 파일을 찾을 수 없습니다: resource/" + file));
+            s3_currAudio.onended = () => btn.classList.remove('playing-effect');
+        }
+        function s3_toggleHint(el) { el.classList.toggle('revealed'); }
+        function s3_moveSlide(num) {
+            if(s3_currAudio) { s3_currAudio.pause(); s3_currAudio.currentTime = 0; }
+            document.querySelectorAll('.speaker-btn').forEach(el => el.classList.remove('playing-effect'));
+            document.querySelectorAll('#section3 .slide').forEach(s => s.classList.remove('active'));
+            document.getElementById('s3-slide' + num).classList.add('active');
+        }
+
+        // --- Section 4 Logic ---
+        const s4_quizData = [
+            { q: "a man who rules an empire", options: ["dedicated", "fold", "emperor"], ans: "emperor", kr: "황제" },
+            { q: "to become solid by cold", options: ["below", "freeze", "survive"], ans: "freeze", kr: "얼다" },
+            { q: "a line made in material, skin, etc.", options: ["fold", "freeze", "adult"], ans: "fold", kr: "주름" },
+            { q: "in or to a lower place", options: ["careful", "journey", "below"], ans: "below", kr: "~아래에" },
+            { q: "used for only one particular purpose", options: ["emperor", "adult", "dedicated"], ans: "dedicated", kr: "헌신적인" },
+            { q: "a degree of how hot or cold a thing is", options: ["hatch", "temperature", "independent"], ans: "temperature", kr: "온도" }
+        ];
+        let s4_idx = 0, s4_timer, s4_wrong = [];
+        
+        function s4_initGame() {
+            s4_idx = 0; s4_wrong = []; clearInterval(s4_timer);
+            document.getElementById('s4-result-screen').style.display = 'none';
+            document.querySelectorAll('.s4-word-balloon').forEach(b => b.remove());
+            document.getElementById('s4-question').innerText = "Loading Game...";
+            s4_startQuiz();
+        }
+        function s4_startQuiz() {
+            if (s4_idx >= s4_quizData.length) { s4_showResult(); return; }
+            document.getElementById('s4-question').innerText = s4_quizData[s4_idx].q;
+            document.querySelectorAll('.s4-word-balloon').forEach(b => b.remove());
+            setTimeout(() => { s4_spawnBalloons(); s4_startTimer(); }, 1000);
+        }
+        function s4_spawnBalloons() {
+            const positions = [15, 45, 75];
+            const opts = [...s4_quizData[s4_idx].options].sort(() => Math.random() - 0.5);
+            const stage = document.getElementById('s4-stage');
+            opts.forEach((text, i) => {
+                const b = document.createElement('div');
+                b.className = 's4-word-balloon';
+                b.innerText = text;
+                b.style.left = positions[i] + "%";
+                b.style.animation = `floatUp ${5 + Math.random() * 2}s linear forwards`;
+                b.onclick = () => s4_checkAnswer(text);
+                stage.appendChild(b);
+            });
+        }
+        function s4_startTimer() {
+            let t = 6;
+            document.getElementById('s4-timer-sec').innerText = t;
+            clearInterval(s4_timer);
+            s4_timer = setInterval(() => {
+                t--; document.getElementById('s4-timer-sec').innerText = t;
+                if (t <= 0) { clearInterval(s4_timer); s4_checkAnswer(null); }
+            }, 1000);
+        }
+        function s4_checkAnswer(sel) {
+            clearInterval(s4_timer);
+            if (sel === s4_quizData[s4_idx].ans) {
+                const mark = document.getElementById('s4-o-mark');
+                mark.style.display = 'block'; setTimeout(()=>mark.style.display='none', 1000);
+                if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else {
+                const mark = document.getElementById('s4-x-mark');
+                mark.style.display = 'block'; setTimeout(()=>mark.style.display='none', 1000);
+                s4_wrong.push(s4_quizData[s4_idx]);
+            }
+            document.querySelectorAll('.s4-word-balloon').forEach(b => b.remove());
+            s4_idx++;
+            setTimeout(s4_startQuiz, 1500);
+        }
+        function s4_showResult() {
+            document.getElementById('s4-result-screen').style.display = 'flex';
+            const list = document.getElementById('s4-wrong-list');
+            list.innerHTML = s4_wrong.length === 0 ? "<tr><td colspan='3' style='text-align:center; color:green; font-weight:bold;'>Perfect!</td></tr>" : "";
+            s4_wrong.forEach(i => list.innerHTML += `<tr><td>${i.ans}</td><td>${i.q}</td><td>${i.kr}</td></tr>`);
+        }
+        function s4_resetGame() { s4_initGame(); }
+
+        // --- Section 5 Logic ---
+        function s5_toggleAudio() {
+            const a = document.getElementById('s5-audio');
+            const b = document.getElementById('s5-speaker-btn');
+            if (a.paused) {
+                a.play().then(() => { b.classList.add('playing-effect'); })
+                .catch(()=>alert("오디오 파일을 찾을 수 없습니다: resource/Reading Passage_Whole_male.mp3"));
+            } else {
+                a.pause(); b.classList.remove('playing-effect');
+            }
+            a.onended = () => b.classList.remove('playing-effect');
+        }
+
+        // --- Section 6 Logic ---
+        let s6_currAudio = null;
+        function s6_moveSlide(num) {
+            s6_stopAudio();
+            document.querySelectorAll('#section6 .slide').forEach(s => s.classList.remove('active'));
+            document.getElementById('s6-slide' + num).classList.add('active');
+        }
+        function s6_playAudio(num, btn) {
+            s6_stopAudio();
+            const fileName = `resource/Passage Study_slide 0${num}.mp3`;
+            s6_currAudio = new Audio(fileName);
+            btn.classList.add('playing-effect');
+            s6_currAudio.play().catch(e=>alert("오디오 파일을 찾을 수 없습니다: " + fileName));
+            s6_currAudio.onended = () => btn.classList.remove('playing-effect');
+        }
+        function s6_stopAudio() {
+            if(s6_currAudio) { s6_currAudio.pause(); }
+            document.querySelectorAll('.s6-english-box .fa-volume-up').forEach(i => {
+                i.classList.remove('playing-effect');
+                i.style.color = 'var(--speaker-blue)';
+            });
+        }
+
+        // --- Section 7 Logic ---
+        function s7_go(n) {
+            document.querySelectorAll('.s7-quiz-slide').forEach(s => s.classList.remove('active'));
+            document.getElementById('s7-q' + n).classList.add('active');
+        }
+        function s7_select(q, i) {
+            const btns = document.getElementById('s7-q' + q).querySelectorAll('.s7-option-btn');
+            btns.forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i));
+        }
+        function s7_checkResult() {
+            document.getElementById('s7-report-screen').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
