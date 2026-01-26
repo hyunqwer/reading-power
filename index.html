@@ -332,13 +332,18 @@
         @keyframes floatUp { from { bottom: -150px; } to { bottom: 120%; } }
         
         /* Report Screen */
-        .report-screen { background: linear-gradient(135deg, #1a2e44 0%, #2c3e50 100%); }
+        .report-screen { 
+            background: linear-gradient(135deg, #1a2e44 0%, #2c3e50 100%); 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 2000; padding: 20px;
+        }
         .report-card { 
-             background: white; width: 95%; max-width: 1200px; padding: 40px; 
-             border-radius: 30px; margin-bottom: 30px; overflow-y: auto; max-height: 70vh;
+             background: white; width: 100%; max-width: 1200px; padding: 40px; 
+             border-radius: 30px; margin-bottom: 30px; overflow-y: auto; max-height: 65vh;
              box-shadow: 0 20px 60px rgba(0,0,0,0.4);
         }
-        .result-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .result-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
         .result-table th { 
             background: var(--navy-blue); color: white; padding: 18px; text-align: left; 
             font-size: 1.1rem; border-top-left-radius: 10px; border-top-right-radius: 10px;
@@ -347,7 +352,7 @@
         .result-table th:last-child { border-top-right-radius: 10px; border-top-left-radius: 0;}
         .result-table td { 
             padding: 18px; border-bottom: 1px solid #eee; color: #444; font-size: 1.05rem; 
-            line-height: 1.5; vertical-align: top;
+            line-height: 1.5; vertical-align: top; word-wrap: break-word;
         }
         .result-table tr:hover td { background-color: #f9f9f9; }
         .result-table tr:last-child td { border-bottom: none; }
@@ -412,6 +417,7 @@
             line-height: 1.4;
         }
         
+        /* Updated Section 7 Button Styling for Clickability */
         .s7-option-btn { 
             width: 100%; padding: 18px 25px; margin-bottom: 12px; 
             border: 2px solid #e0e0e0; border-radius: 12px; 
@@ -419,6 +425,7 @@
             transition: all 0.2s ease; 
             font-size: 1.1rem; color: #444;
             display: flex; align-items: center;
+            position: relative; z-index: 5; /* Ensure clickable */
         }
         .s7-option-btn:hover { border-color: var(--button-orange); background: #fff8f0; transform: translateX(5px); }
         .s7-option-btn.selected { 
@@ -426,6 +433,7 @@
             font-weight: 700; color: var(--navy-blue);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
+        
         .s7-nav-box { 
             display: flex; gap: 15px; justify-content: flex-end; 
             margin-top: auto; width: 100%; padding-top: 20px;
@@ -436,7 +444,7 @@
         }
         .s7-nav-box .next-btn:hover, .s7-nav-box .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
-        .s7-quiz-slide { display: none; flex-direction: column; width: 100%; height: 100%; overflow-y: auto; padding-bottom: 10px; }
+        .s7-quiz-slide { display: none; flex-direction: column; width: 100%; height: 100%; overflow-y: auto; padding-bottom: 10px; z-index: 5; }
         .s7-quiz-slide.active { display: flex; }
 
         /* Animation Keyframes */
@@ -1006,6 +1014,9 @@
         function s4_initGame() {
             s4_idx = 0; s4_wrong = []; clearInterval(s4_timer);
             document.getElementById('s4-result-screen').style.display = 'none';
+            document.querySelector('.s4-game-main').style.display = 'flex';
+            document.querySelector('.s4-timer-box').style.display = 'flex';
+            
             document.querySelectorAll('.s4-word-balloon').forEach(b => b.remove());
             document.getElementById('s4-question').innerText = "Loading Game...";
             s4_startQuiz();
@@ -1055,7 +1066,10 @@
             setTimeout(s4_startQuiz, 1500);
         }
         function s4_showResult() {
+            document.querySelector('.s4-game-main').style.display = 'none';
+            document.querySelector('.s4-timer-box').style.display = 'none';
             document.getElementById('s4-result-screen').style.display = 'flex';
+            
             const list = document.getElementById('s4-wrong-list');
             list.innerHTML = s4_wrong.length === 0 ? "<tr><td colspan='3' style='text-align:center; color:green; font-weight:bold;'>Perfect!</td></tr>" : "";
             s4_wrong.forEach(i => list.innerHTML += `<tr><td>${i.ans}</td><td>${i.q}</td><td>${i.kr}</td></tr>`);
@@ -1108,6 +1122,12 @@
             btns.forEach((b, idx) => b.classList.toggle('selected', idx + 1 === i));
         }
         function s7_checkResult() {
+            // Hide Quiz Area
+            document.querySelector('.s7-quiz-area').style.display = 'none';
+            document.querySelector('.s7-passage-display').style.display = 'none';
+            document.querySelector('.s7-main-layout').style.display = 'none';
+            
+            // Show Report
             document.getElementById('s7-report-screen').style.display = 'flex';
         }
     </script>
