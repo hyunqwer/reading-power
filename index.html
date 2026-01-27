@@ -22,6 +22,8 @@
             --text-dark: #2C3E50;
             --pos-purple: #9B59B6;
             --highlight-color: #FFF3CD;
+            --error-red: #E74C3C;
+            --success-green: #2ECC71;
             
             /* --- Typography --- */
             --font-title: 'Fredoka One', cursive;
@@ -417,7 +419,7 @@
             line-height: 1.4;
         }
         
-        /* Updated Section 7 Button Styling for Clickability */
+        /* Updated Section 7 Button Styling */
         .s7-option-btn { 
             width: 100%; padding: 18px 25px; margin-bottom: 12px; 
             border: 2px solid #e0e0e0; border-radius: 12px; 
@@ -447,6 +449,112 @@
         .s7-quiz-slide { display: none; flex-direction: column; width: 100%; height: 100%; overflow-y: auto; padding-bottom: 10px; z-index: 5; }
         .s7-quiz-slide.active { display: flex; }
 
+        /* --- SECTION 8: READING STRATEGY CSS --- */
+        .s8-intro-box {
+            background: #FFFFFF; color: #333;
+            padding: clamp(20px, 3vh, 30px); border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px; border-left: 10px solid var(--button-orange);
+            width: 100%; max-width: 1100px;
+        }
+        .s8-intro-box h2 { color: var(--button-orange); font-family: var(--font-title); font-size: 1.8rem; margin-bottom: 10px; }
+        .s8-intro-box p { font-size: 1.15rem; line-height: 1.6; }
+
+        .s8-quiz-container {
+            background: rgba(255, 255, 255, 0.95); color: #1a1a1a;
+            padding: clamp(30px, 5vh, 40px); border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            width: 100%; max-width: 1100px;
+            max-height: 60vh; overflow-y: auto;
+        }
+        .s8-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px dashed var(--ice-blue); }
+        .s8-title { font-family: var(--font-title); font-size: 1.8rem; color: var(--navy-blue); margin-bottom: 15px; }
+        
+        .s8-list { display: flex; flex-direction: column; gap: 12px; }
+        .s8-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #FFFFFF; padding: 15px 25px; border-radius: 16px;
+            border: 2px solid #f0f0f0; transition: 0.2s;
+        }
+        .s8-item:hover { transform: translateX(5px); border-color: var(--ice-blue); }
+        .s8-text { font-size: 1.1rem; line-height: 1.4; color: #333; flex: 1; padding-right: 15px; }
+        .s8-input {
+            width: 50px; height: 50px; text-align: center;
+            font-size: 1.4rem; font-weight: 700; font-family: var(--font-title);
+            border: 2px solid var(--ice-blue); border-radius: 12px;
+            color: var(--button-orange); outline: none; transition: 0.3s;
+        }
+        .s8-input:focus { border-color: var(--button-orange); }
+
+        .s8-answer-wrapper { position: relative; margin-top: 10px; }
+        .s8-answer-btn {
+            display: none; background: var(--button-orange); color: white;
+            padding: 8px 20px; border-radius: 50px; border: none;
+            font-weight: bold; cursor: pointer; font-size: 1rem;
+        }
+        .s8-bubble {
+            display: none; position: absolute; top: 45px; left: 50%; transform: translateX(-50%);
+            background: var(--navy-blue); color: var(--white);
+            padding: 15px; border-radius: 15px; width: 250px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; text-align: center;
+        }
+        .s8-bubble::after {
+            content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            border-width: 0 10px 10px 10px; border-style: solid;
+            border-color: transparent transparent var(--navy-blue) transparent;
+        }
+
+        /* --- SECTION 9: SUMMARY CSS --- */
+        .s9-layout {
+            display: grid; grid-template-columns: 1fr 280px; gap: 30px;
+            width: 100%; max-width: 1300px;
+        }
+        .s9-card {
+            background: rgba(255, 255, 255, 0.95); color: #1a1a1a;
+            padding: 40px; border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            line-height: 2.8; font-size: 1.35rem; text-align: justify;
+        }
+        .s9-drop-zone {
+            display: inline-flex; min-width: 140px; height: 45px;
+            background: #f0f4f8; border: 2px dashed #b0bec5;
+            border-radius: 10px; vertical-align: middle; margin: 0 6px;
+            justify-content: center; align-items: center; position: relative;
+        }
+        .s9-drag-content {
+            width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+            font-weight: 700; color: var(--navy-blue); background: var(--white);
+            border: 1px solid #cfd8dc; border-radius: 8px; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .s9-feedback {
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            color: var(--error-red); font-weight: 800; font-size: 1rem;
+            white-space: nowrap; display: none; background: rgba(255,255,255,0.9);
+            padding: 2px 8px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .s9-word-bank {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+            padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+            display: flex; flex-direction: column; gap: 15px; height: fit-content;
+        }
+        .s9-item {
+            background: var(--white); color: var(--navy-blue);
+            padding: 15px; border-radius: 12px; text-align: center;
+            font-weight: 700; cursor: grab; font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        .s9-item:hover { transform: translateY(-2px); }
+        .s9-item.used { background: rgba(255,255,255,0.3); color: rgba(255,255,255,0.5); cursor: default; box-shadow: none; pointer-events: none;}
+
+        #s9-answer-btn {
+            display: none; background: var(--button-orange); color: white;
+            padding: 15px; border-radius: 12px; border: none;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
+        }
+
         /* Animation Keyframes */
         @keyframes slideUpFade { to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse {
@@ -469,6 +577,10 @@
             .s7-main-layout { grid-template-columns: 1fr; grid-template-rows: 0.8fr 1.2fr; gap: 20px; }
             .s7-passage-display { padding: 25px; font-size: 1rem; }
             .s7-quiz-area { padding: 25px; }
+
+            .s9-layout { grid-template-columns: 1fr; gap: 20px; }
+            .s9-word-bank { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            .s9-item { width: auto; min-width: 100px; }
         }
 
         @media (max-height: 700px) {
@@ -477,6 +589,7 @@
             .s2-split-container { height: 50vh; }
             .s4-word-balloon { bottom: -100px; padding: 10px 20px; font-size: 1.2rem; }
             .s5-passage-box { height: 50vh; padding: 20px; font-size: 1.1rem; }
+            .s8-quiz-container { max-height: 50vh; }
         }
         
     </style>
@@ -690,7 +803,7 @@
         <audio id="s5-audio" src="resource/Reading Passage_Whole_male.mp3" onerror="alert('오디오 파일을 찾을 수 없습니다: resource/Reading Passage_Whole_male.mp3')"></audio>
     </div>
 
-    <!-- ================= SECTION 6: PASSAGE STUDY (FULL VERSION) ================= -->
+    <!-- ================= SECTION 6: PASSAGE STUDY ================= -->
     <div id="section6" class="app-section">
         <div class="header-area">
             <h1 class="corner-title">Passage Study</h1>
@@ -774,7 +887,7 @@
         </div>
     </div>
 
-    <!-- ================= SECTION 7: COMPREHENSION (FULL VERSION) ================= -->
+    <!-- ================= SECTION 7: COMPREHENSION ================= -->
     <div id="section7" class="app-section">
         <div class="header-area">
             <h1 class="corner-title">Reading Comprehension</h1>
@@ -882,8 +995,90 @@
                     </tbody>
                 </table>
             </div>
-            <button class="next-btn" onclick="alert('All Lessons Completed! Great Job!')" style="position:static; margin-top:30px;">Finish All</button>
+            <button class="next-btn" onclick="goToSection(8)" style="position:static; margin-top:30px;">Next <i class="fas fa-chevron-right"></i></button>
         </div>
+    </div>
+
+    <!-- ================= SECTION 8: READING STRATEGY ================= -->
+    <div id="section8" class="app-section">
+        <div class="header-area">
+            <h1 class="corner-title">Reading Strategy</h1>
+        </div>
+
+        <div class="s8-intro-box">
+            <h2><i class="fas fa-layer-group"></i> Sequencing</h2>
+            <p><strong>Sequencing</strong> means putting events in the order they happened.<br>What happened first, next, and last? It helps you understand the story better!</p>
+        </div>
+
+        <div class="s8-quiz-container">
+            <div class="s8-header">
+                <h3 class="s8-title">The Birth of an Emperor Penguin Chick</h3>
+                <div class="s8-answer-wrapper">
+                    <button id="s8-answerBtn" class="s8-answer-btn" onclick="s8_toggleBubble()"><i class="fas fa-key"></i> Answer</button>
+                    <div id="s8-answerBubble" class="s8-bubble">
+                        <p style="margin-bottom: 8px; color: var(--ice-blue);"><b>Correct Order:</b></p>
+                        <p>6 – 3 – 2 – 5 – 1 – 4</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="s8-list">
+                <div class="s8-item"><span class="s8-text">The mother returns with food.</span><input type="text" class="s8-input" maxlength="1" oninput="s8_check()"></div>
+                <div class="s8-item"><span class="s8-text">The father covers the egg with a special skin fold and stands still for two months.</span><input type="text" class="s8-input" maxlength="1" oninput="s8_check()"></div>
+                <div class="s8-item"><span class="s8-text">The mother goes on a long journey to find food.</span><input type="text" class="s8-input" maxlength="1" oninput="s8_check()"></div>
+                <div class="s8-item"><span class="s8-text">The egg hatches.</span><input type="text" class="s8-input" maxlength="1" oninput="s8_check()"></div>
+                <div class="s8-item"><span class="s8-text">The mother penguin lays an egg and passes it to the father.</span><input type="text" class="s8-input" maxlength="1" oninput="s8_check()"></div>
+                <div class="s8-item"><span class="s8-text">The father stands still for two months throughout the winter.</span><input type="text" class="s8-input" maxlength="1" oninput="s8_check()"></div>
+            </div>
+        </div>
+
+        <button class="next-btn" onclick="goToSection(9)">Next <i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- ================= SECTION 9: SUMMARY ================= -->
+    <div id="section9" class="app-section">
+        <div class="header-area">
+            <h1 class="corner-title">Summary</h1>
+        </div>
+
+        <div class="instruction" style="max-width: 1300px;">Complete the summary with the words in the box.</div>
+
+        <div class="s9-layout">
+            <div class="s9-card">
+                Emperor penguins need a lot of 
+                <div class="s9-drop-zone" data-answer="dedicated" ondragover="s9_allowDrop(event)" ondrop="s9_handleDrop(event)" onclick="s9_removeItem(this)">
+                    <span class="s9-feedback">dedicated</span>
+                </div> 
+                work to raise chicks from the egg. Every winter, each mother penguin 
+                <div class="s9-drop-zone" data-answer="lays" ondragover="s9_allowDrop(event)" ondrop="s9_handleDrop(event)" onclick="s9_removeItem(this)">
+                    <span class="s9-feedback">lays</span>
+                </div> 
+                just one egg and passes it to the father. And then the mother goes on a long 
+                <div class="s9-drop-zone" data-answer="journey" ondragover="s9_allowDrop(event)" ondrop="s9_handleDrop(event)" onclick="s9_removeItem(this)">
+                    <span class="s9-feedback">journey</span>
+                </div> 
+                to find food. Meanwhile, the father puts the egg on his feet and stands still in the freezing cold for two months. Finally, the egg 
+                <div class="s9-drop-zone" data-answer="hatches" ondragover="s9_allowDrop(event)" ondrop="s9_handleDrop(event)" onclick="s9_removeItem(this)">
+                    <span class="s9-feedback">hatches</span>
+                </div>. 
+                The mother returns with food for the 
+                <div class="s9-drop-zone" data-answer="chick" ondragover="s9_allowDrop(event)" ondrop="s9_handleDrop(event)" onclick="s9_removeItem(this)">
+                    <span class="s9-feedback">chick</span>
+                </div>. 
+                Then, the parents take turns feeding and caring for their chick until it’s big.
+            </div>
+
+            <div class="s9-word-bank">
+                <div class="s9-item" draggable="true" ondragstart="s9_handleDragStart(event)" id="dedicated">dedicated</div>
+                <div class="s9-item" draggable="true" ondragstart="s9_handleDragStart(event)" id="lays">lays</div>
+                <div class="s9-item" draggable="true" ondragstart="s9_handleDragStart(event)" id="journey">journey</div>
+                <div class="s9-item" draggable="true" ondragstart="s9_handleDragStart(event)" id="hatches">hatches</div>
+                <div class="s9-item" draggable="true" ondragstart="s9_handleDragStart(event)" id="chick">chick</div>
+                <button id="s9-answer-btn" onclick="s9_checkAnswers()">Answer</button>
+            </div>
+        </div>
+
+        <button class="next-btn" onclick="alert('Congratulations! Lesson Complete!')">Finish <i class="fas fa-check"></i></button>
     </div>
 
     <script>
@@ -1129,6 +1324,67 @@
             
             // Show Report
             document.getElementById('s7-report-screen').style.display = 'flex';
+        }
+
+        // --- Section 8 Logic ---
+        function s8_check() {
+            const inputs = document.querySelectorAll('.s8-input');
+            const allFilled = Array.from(inputs).every(i => i.value.trim() !== "");
+            document.getElementById('s8-answerBtn').style.display = allFilled ? 'inline-block' : 'none';
+        }
+        function s8_toggleBubble() {
+            const b = document.getElementById('s8-answerBubble');
+            b.style.display = b.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // --- Section 9 Logic ---
+        function s9_allowDrop(ev) { ev.preventDefault(); }
+        function s9_handleDragStart(ev) {
+            if (ev.target.classList.contains('used')) { ev.preventDefault(); return; }
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+        function s9_handleDrop(ev) {
+            ev.preventDefault();
+            const zone = ev.currentTarget;
+            if (zone.querySelector('.s9-drag-content')) return;
+            const id = ev.dataTransfer.getData("text");
+            const draggedEl = document.getElementById(id);
+            if(!draggedEl) return;
+            
+            const content = document.createElement('div');
+            content.className = 's9-drag-content';
+            content.innerText = draggedEl.innerText;
+            content.dataset.id = id;
+            zone.appendChild(content);
+            draggedEl.classList.add('used');
+            s9_checkCompletion();
+        }
+        function s9_removeItem(zone) {
+            const content = zone.querySelector('.s9-drag-content');
+            if (content) {
+                document.getElementById(content.dataset.id).classList.remove('used');
+                content.remove();
+                zone.querySelector('.s9-feedback').style.display = 'none';
+                zone.style.border = '2px dashed #b0bec5';
+                s9_checkCompletion();
+            }
+        }
+        function s9_checkCompletion() {
+            const filled = document.querySelectorAll('.s9-drag-content').length;
+            document.getElementById('s9-answer-btn').style.display = (filled === 5) ? 'block' : 'none';
+        }
+        function s9_checkAnswers() {
+            document.querySelectorAll('.s9-drop-zone').forEach(zone => {
+                const content = zone.querySelector('.s9-drag-content');
+                const feedback = zone.querySelector('.s9-feedback');
+                if (content && content.innerText === zone.dataset.answer) {
+                    zone.style.border = '2px solid #2ECC71';
+                    feedback.style.display = 'none';
+                } else {
+                    zone.style.border = '2px solid var(--error-red)';
+                    feedback.style.display = 'block';
+                }
+            });
         }
     </script>
 </body>
