@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Reading Coach: Emperor Penguins</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap');
+
+        :root {
+            --navy-dark: #0F1C2E;
+            --navy-light: #1A2E44;
+            --ice-blue: #A8DADC;
+            --accent-orange: #E67E22;
+            --tech-green: #2ECC71;
+            --alert-red: #E74C3C;
+            --white: #FFFFFF;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background-color: var(--navy-dark); 
+            color: var(--white); 
+            height: 100vh; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* --- UI Framework --- */
+        .app-container {
+            width: 100%; height: 100%;
+            position: relative;
+            background: radial-gradient(circle at 50% 30%, #203a55 0%, var(--navy-dark) 70%);
+            display: flex; flex-direction: column;
+        }
+
+        .hud-header {
+            position: absolute; top: 0; left: 0; width: 100%;
+            padding: 20px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            border-bottom: 1px solid rgba(168, 218, 220, 0.1);
+            background: linear-gradient(to bottom, rgba(15, 28, 46, 0.9), transparent);
+        }
+
+        .hud-logo { font-family: 'Fredoka One'; font-size: 1.5rem; color: var(--ice-blue); letter-spacing: 1px; }
+        .hud-status { font-family: 'Roboto Mono'; font-size: 0.9rem; color: var(--tech-green); display: flex; gap: 15px; }
+
+        /* --- AI Coach Interface --- */
+        .ai-interface {
+            position: absolute; bottom: 40px; right: 40px;
+            width: 350px;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 200;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .ai-avatar {
+            width: 60px; height: 60px;
+            background: var(--navy-light);
+            border: 2px solid var(--ice-blue);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.8rem; color: var(--ice-blue);
+            box-shadow: 0 0 20px rgba(168, 218, 220, 0.3);
+            margin-left: auto;
+            position: relative;
+        }
+        
+        .ai-avatar::after {
+            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 50%; border: 2px solid transparent;
+            border-top-color: var(--accent-orange);
+            animation: spin 3s linear infinite;
+        }
+
+        .ai-bubble {
+            background: rgba(15, 28, 46, 0.95);
+            border: 1px solid var(--ice-blue);
+            border-radius: 20px 20px 5px 20px;
+            padding: 20px;
+            color: var(--ice-blue);
+            font-size: 1rem; line-height: 1.6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            opacity: 0; transform: translateY(20px);
+            animation: popIn 0.5s forwards 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .typing-cursor::after { content: '|'; animation: blink 1s infinite; }
+
+        /* --- SECTIONS --- */
+        .section {
+            display: none; width: 100%; height: 100%;
+            flex-direction: column; justify-content: center; align-items: center;
+            position: absolute; top: 0; left: 0;
+            padding-bottom: 80px; /* Space for AI bubble */
+        }
+        .section.active { display: flex; animation: fadeIn 0.8s ease; }
+
+        /* --- Section 1: Briefing --- */
+        .mission-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 50px; text-align: center;
+            max-width: 800px; width: 90%;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            transform: translateY(20px); opacity: 0;
+            animation: slideUp 0.8s forwards 0.5s;
+        }
+
+        .mission-title {
+            font-family: 'Fredoka One'; font-size: 4rem;
+            background: linear-gradient(135deg, var(--white), var(--ice-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .mission-subtitle {
+            font-size: 1.5rem; color: var(--accent-orange); font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px;
+        }
+        .mission-desc { font-size: 1.2rem; color: #ddd; margin-bottom: 40px; line-height: 1.8; }
+        
+        .btn-start {
+            padding: 18px 50px; font-size: 1.3rem; font-weight: 800;
+            color: var(--white); background: linear-gradient(135deg, var(--accent-orange), #d35400);
+            border: none; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
+            transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-start:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 35px rgba(230, 126, 34, 0.6); }
+
+        /* --- Section 2: Observation (Hypothesis) --- */
+        .obs-container {
+            width: 90%; height: 70%;
+            position: relative;
+            border-radius: 20px; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            border: 2px solid var(--navy-light);
+        }
+
+        .video-sim {
+            width: 100%; height: 100%;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 50%, #fff 100%); /* Ice/Sky */
+            position: relative; overflow: hidden;
+        }
+        .penguin-shape {
+            position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
+            width: 100px; height: 200px; background: #2c3e50; border-radius: 50% 50% 40% 40%;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .penguin-shape::after { /* White belly */
+            content:''; position: absolute; bottom: 5px; left: 15%; width: 70%; height: 80%;
+            background: white; border-radius: 40% 40% 35% 35%;
+        }
+        .snow-particle {
+            position: absolute; top: -10px; background: white; border-radius: 50%; opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        .floating-clue {
+            position: absolute;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--navy-dark);
+            font-weight: 700; font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.2s;
+            animation: floatAcross 8s linear forwards;
+            border: 2px solid transparent;
+            z-index: 10;
+        }
+        .floating-clue:hover { transform: scale(1.1); border-color: var(--accent-orange); }
+        .floating-clue.caught { animation: catchEffect 0.5s forwards; pointer-events: none; }
+        .floating-clue.distractor { animation: shake 0.5s; background: #ffcfcf; color: #c0392b; }
+
+        .inventory-bar {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 28, 46, 0.9);
+            padding: 10px 30px; border-radius: 50px;
+            display: flex; gap: 20px; align-items: center;
+            border: 1px solid var(--ice-blue);
+            backdrop-filter: blur(10px);
+        }
+        .inv-title { font-family: 'Fredoka One'; color: var(--ice-blue); margin-right: 10px; }
+        .inv-slot {
+            width: 120px; height: 40px;
+            background: rgba(255,255,255,0.1);
+            border: 1px dashed rgba(255,255,255,0.3);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; color: var(--tech-green); font-weight: bold;
+            transition: all 0.3s;
+        }
+        .inv-slot.filled { background: rgba(46, 204, 113, 0.2); border-color: var(--tech-green); border-style: solid;}
+
+        /* --- Section 3: Context Decoding Styles --- */
+        .decode-card {
+            background: rgba(15, 28, 46, 0.85);
+            border: 2px solid var(--ice-blue);
+            border-radius: 20px;
+            padding: 40px; width: 90%; max-width: 900px;
+            box-shadow: 0 0 40px rgba(168, 218, 220, 0.1);
+            display: flex; flex-direction: column; align-items: center;
+            position: relative; overflow: hidden;
+            backdrop-filter: blur(15px);
+        }
+        .decode-header {
+            width: 100%; border-bottom: 1px dashed rgba(255,255,255,0.2);
+            padding-bottom: 15px; margin-bottom: 30px; display: flex; justify-content: space-between;
+        }
+        .decode-sentence {
+            font-size: 1.8rem; line-height: 1.8; color: var(--white);
+            text-align: center; margin-bottom: 40px; font-weight: 300;
+        }
+        .hidden-word-slot {
+            display: inline-block; min-width: 120px; border-bottom: 3px solid var(--accent-orange);
+            color: var(--accent-orange); font-weight: 700; padding: 0 10px; text-align: center;
+            animation: pulse 2s infinite; cursor: help;
+        }
+        .context-clue {
+            transition: all 0.5s; border-radius: 4px; padding: 2px 5px;
+        }
+        .context-clue.highlight {
+            background-color: rgba(46, 204, 113, 0.3);
+            color: var(--tech-green); border: 1px solid var(--tech-green);
+            font-weight: 700;
+        }
+        .options-grid {
+            display: flex; gap: 20px; justify-content: center; width: 100%; flex-wrap: wrap;
+        }
+        .option-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            padding: 15px 30px; border-radius: 12px; color: var(--ice-blue);
+            font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
+            min-width: 150px;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+        .option-btn.correct { background: var(--tech-green); color: #0F1C2E; border-color: var(--tech-green); }
+        .option-btn.wrong { background: var(--alert-red); color: white; border-color: var(--alert-red); animation: shake 0.4s; }
+
+        /* --- Section 4: Data Matching Styles --- */
+        .match-container {
+            display: flex; justify-content: space-between; width: 90%; max-width: 1000px;
+            gap: 50px; position: relative;
+        }
+        .match-col {
+            flex: 1; display: flex; flex-direction: column; gap: 20px;
+        }
+        .match-item {
+            background: rgba(255,255,255,0.08); padding: 25px;
+            border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+            text-align: center; cursor: pointer; transition: all 0.3s;
+            position: relative; font-size: 1.2rem;
+        }
+        .match-item:hover { border-color: var(--ice-blue); background: rgba(255,255,255,0.12); }
+        .match-item.selected { border-color: var(--accent-orange); background: rgba(230, 126, 34, 0.2); box-shadow: 0 0 15px rgba(230, 126, 34, 0.4); }
+        .match-item.matched { border-color: var(--tech-green); background: rgba(46, 204, 113, 0.2); color: var(--tech-green); pointer-events: none; opacity: 0.8;}
+        
+        .connector-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1;
+        }
+
+        /* --- Section 5: Reading Passage Styles --- */
+        .reading-layout {
+            display: flex; gap: 30px; width: 95%; max-width: 1300px; height: 75vh;
+        }
+        .passage-viewer {
+            flex: 2; background: rgba(255,255,255,0.95); color: #1a1a1a;
+            border-radius: 20px; padding: 40px; font-size: 1.15rem; line-height: 2.2;
+            overflow-y: auto; position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .passage-viewer p { margin-bottom: 25px; text-align: justify; }
+        .toolbox-panel {
+            flex: 0.8; background: rgba(15, 28, 46, 0.9);
+            border: 1px solid var(--ice-blue); border-radius: 20px;
+            padding: 25px; display: flex; flex-direction: column; gap: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .tool-card {
+            background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .tool-title {
+            color: var(--accent-orange); font-weight: 700; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .tool-desc { font-size: 0.9rem; color: #ccc; margin-bottom: 10px; }
+        
+        /* Interactive Text Elements */
+        .interactive-word { cursor: pointer; border-radius: 3px; padding: 0 2px; transition: background 0.2s; }
+        .interactive-word:hover { background: rgba(0,0,0,0.05); }
+        .signal-found { background: var(--accent-orange); color: white; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .paragraph-container { position: relative; margin-bottom: 30px; padding-left: 10px; border-left: 3px solid transparent; transition: 0.3s; }
+        .paragraph-container:hover { border-left-color: #ddd; }
+        .paragraph-tag-zone {
+            position: absolute; right: -130px; top: 0; width: 120px;
+            display: flex; flex-direction: column; gap: 5px; opacity: 0.3; transition: 0.3s;
+        }
+        .passage-viewer:hover .paragraph-tag-zone { opacity: 1; }
+        
+        .tag-btn {
+            background: #eee; border: none; padding: 5px 10px; border-radius: 4px;
+            font-size: 0.8rem; cursor: pointer; text-align: left;
+            transition: 0.2s; color: #555;
+        }
+        .tag-btn:hover { background: #ddd; }
+        .tag-btn.active { background: var(--tech-green); color: white; font-weight: bold; }
+
+        /* --- Section 6: Chunking Styles --- */
+        .chunking-stage {
+            background: white; border-radius: 20px; padding: 50px;
+            width: 90%; max-width: 1000px; min-height: 400px;
+            /* FIXED: Changed to row & wrap to fix vertical stacking overflow */
+            display: flex; flex-direction: row; flex-wrap: wrap; 
+            justify-content: center; align-items: center; align-content: center;
+            color: #2c3e50; font-size: 1.8rem; line-height: 1.5;
+            position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            gap: 20px 10px; /* Add gap for spacing between words */
+        }
+        .chunk-word-wrapper { display: inline-flex; align-items: center; position: relative; margin: 0; }
+        .chunk-trigger {
+            width: 20px; height: 40px; cursor: pointer;
+            position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+            z-index: 10;
+        }
+        .chunk-trigger:hover::after {
+            content: '/'; color: #ccc; font-weight: 300; font-size: 1.5rem;
+            position: absolute; left: 5px;
+        }
+        .slash-mark {
+            color: var(--accent-orange); font-weight: 900; margin: 0 5px; 
+            font-size: 1.5rem; animation: popIn 0.3s;
+        }
+
+        /* --- Section 7: Evidence Linking Styles --- */
+        .evidence-layout {
+            display: flex; gap: 30px; width: 95%; max-width: 1300px; height: 75vh;
+        }
+        .s7-passage-box {
+            flex: 1.5; background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px; padding: 40px; font-size: 1.1rem; line-height: 2.0;
+            overflow-y: auto; color: #333;
+        }
+        .selectable-sentence {
+            cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.2s;
+        }
+        .selectable-sentence:hover { background: rgba(230, 126, 34, 0.1); }
+        .selectable-sentence.selected-evidence { 
+            background: rgba(46, 204, 113, 0.2); border-bottom: 3px solid var(--tech-green); 
+            font-weight: 600;
+        }
+
+        .quiz-panel {
+            flex: 1; background: rgba(15, 28, 46, 0.95);
+            border: 1px solid var(--ice-blue); border-radius: 20px;
+            padding: 30px; display: flex; flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+        .quiz-question {
+            font-size: 1.3rem; color: var(--white); margin-bottom: 25px; font-weight: 700;
+            border-left: 5px solid var(--accent-orange); padding-left: 15px;
+        }
+        .quiz-option {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; margin-bottom: 12px; border-radius: 10px;
+            color: #ddd; cursor: pointer; transition: all 0.2s; display: flex; align-items: center;
+        }
+        .quiz-option:hover { background: rgba(255,255,255,0.15); }
+        .quiz-option.selected { 
+            border-color: var(--accent-orange); background: rgba(230, 126, 34, 0.2); 
+            color: var(--white); font-weight: bold;
+        }
+        
+        .evidence-status {
+            margin-top: auto; padding: 15px; border-radius: 10px;
+            background: rgba(0,0,0,0.3); border: 1px dashed #666;
+            color: #aaa; font-size: 0.9rem; text-align: center;
+        }
+        .evidence-status.active { border-color: var(--tech-green); color: var(--tech-green); background: rgba(46, 204, 113, 0.1); }
+
+        /* --- Section 8: Report Card Styles --- */
+        .report-container {
+            width: 90%; max-width: 900px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px; padding: 50px;
+            color: #2c3e50;
+            display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .agent-profile {
+            text-align: center; padding-right: 40px; border-right: 2px solid #eee;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .agent-rank {
+            font-family: 'Fredoka One'; font-size: 3rem; color: var(--navy-dark);
+            margin-bottom: 10px;
+        }
+        .agent-type {
+            background: var(--accent-orange); color: white; padding: 5px 15px;
+            border-radius: 20px; font-weight: bold; font-size: 1.1rem; margin-bottom: 20px;
+        }
+        
+        .skill-bars { display: flex; flex-direction: column; gap: 20px; justify-content: center; }
+        .skill-item { width: 100%; }
+        .skill-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 700; }
+        .skill-track {
+            width: 100%; height: 15px; background: #e0e0e0; border-radius: 10px; overflow: hidden;
+        }
+        .skill-fill { height: 100%; border-radius: 10px; transition: width 1s ease-out; }
+
+        /* Animations */
+        @keyframes spin { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
+        @keyframes popIn { from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);} }
+        @keyframes slideUp { from {opacity: 0; transform: translateY(50px);} to {opacity: 1; transform: translateY(0);} }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+        @keyframes blink { 50% {opacity: 0;} }
+        @keyframes fall { to { transform: translateY(110vh); } }
+        @keyframes floatAcross { from { left: -150px; } to { left: 110%; } }
+        @keyframes catchEffect { 0% { transform: scale(1); } 50% { transform: scale(1.5); opacity: 0.8; } 100% { transform: scale(0); opacity: 0; } }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="hud-header">
+            <div class="hud-logo"><i class="fas fa-robot"></i> AI READING LAB</div>
+            <div class="hud-status">
+                <span><i class="fas fa-wifi"></i> CONNECTED</span>
+                <span><i class="fas fa-user-astronaut"></i> AGENT_01</span>
+            </div>
+        </header>
+
+        <!-- Section 1: Briefing -->
+        <section id="section1" class="section active">
+            <div class="mission-card">
+                <h1 class="mission-title">EMPEROR PENGUINS</h1>
+                <h2 class="mission-subtitle">Mission Code: Survival</h2>
+                <div class="mission-desc">
+                    요원님, 남극의 황제펭귄들은 영하 40도의 추위에서<br>
+                    어떻게 얼어죽지 않고 알을 지켜낼까요?<br><br>
+                    이번 미션은 글을 읽고 <strong>'생존의 3가지 비결'</strong>을 밝혀내는 것입니다.<br>
+                    준비되셨습니까?
+                </div>
+                <button class="btn-start" onclick="startMission()">
+                    <i class="fas fa-play-circle"></i> 미션 시작
+                </button>
+            </div>
+        </section>
+
+        <!-- Section 2: Active Observation -->
+        <section id="section2" class="section">
+            <div class="obs-container">
+                <div class="video-sim" id="videoCanvas">
+                    <!-- Snow and penguins generated by JS -->
+                    <div class="penguin-shape"></div>
+                    <div style="position:absolute; bottom:12%; left:53%; width:40px; height:40px; background:#f1c40f; border-radius:50%; box-shadow:0 0 10px #f39c12;"></div> <!-- Egg representation -->
+                </div>
+                
+                <!-- Inventory (Hypothesis) -->
+                <div class="inventory-bar">
+                    <span class="inv-title">DATA:</span>
+                    <div class="inv-slot" id="slot1">Empty</div>
+                    <div class="inv-slot" id="slot2">Empty</div>
+                    <div class="inv-slot" id="slot3">Empty</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Context Decoding -->
+        <section id="section3" class="section">
+            <div class="decode-card">
+                <div class="decode-header">
+                    <span style="color:var(--accent-orange)"><i class="fas fa-terminal"></i> DECODING PROTOCOL</span>
+                    <span id="decode-progress" style="color:var(--ice-blue)">1 / 3</span>
+                </div>
+                <div class="decode-sentence" id="sentence-display">
+                    <!-- JS will inject sentence here -->
+                </div>
+                <div class="options-grid" id="options-display">
+                    <!-- JS will inject options here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Data Matching -->
+        <section id="section4" class="section">
+            <div class="mission-card" style="width: 95%; max-width: 1100px; padding: 30px;">
+                <h2 class="mission-subtitle" style="margin-bottom:20px;">DATA LINKING</h2>
+                <p class="mission-desc" style="margin-bottom: 30px; font-size:1rem;">복구된 단어를 데이터베이스의 정의와 연결하십시오.</p>
+                
+                <div class="match-container">
+                    <svg class="connector-line" id="svg-connector"></svg>
+                    <div class="match-col" id="col-words">
+                        <!-- Words injected here -->
+                    </div>
+                    <div class="match-col" id="col-defs">
+                        <!-- Definitions injected here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Macro Structure Reading -->
+        <section id="section5" class="section">
+            <div class="reading-layout">
+                <div class="passage-viewer" id="passage-container">
+                    <!-- Text injected by JS -->
+                </div>
+                <div class="toolbox-panel">
+                    <h3 style="color:var(--white); border-bottom:1px solid #555; padding-bottom:10px;">ANALYSIS TOOLS</h3>
+                    
+                    <div class="tool-card">
+                        <div class="tool-title">
+                            <span><i class="fas fa-satellite-dish"></i> Signal Detector</span>
+                            <i class="fas fa-toggle-on" style="color:var(--tech-green); font-size:1.5rem;"></i>
+                        </div>
+                        <div class="tool-desc">글의 흐름이 바뀌는 신호(But, Then, Finally)를 찾아 클릭하세요.</div>
+                        <div style="font-size:0.9rem; color:var(--tech-green);">Found: <span id="signal-count">0</span> / 3</div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-title">
+                            <span><i class="fas fa-tags"></i> Topic Tagger</span>
+                        </div>
+                        <div class="tool-desc">각 문단의 역할을 지정하세요.</div>
+                        <div style="font-size:0.9rem; color:var(--ice-blue);">Tagged: <span id="tag-count">0</span> / 4</div>
+                    </div>
+
+                    <button class="btn-start" onclick="finishSection5()" id="s5-finish-btn" style="margin-top:auto; font-size:1rem; padding:12px; width:100%; justify-content:center; opacity:0.5; pointer-events:none;">
+                        Deep Dive <i class="fas fa-arrow-down"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Micro Structure (Chunking) -->
+        <section id="section6" class="section">
+            <h2 class="mission-subtitle" style="margin-bottom:30px;">SYNTAX PARSING (끊어 읽기)</h2>
+            <div class="chunking-stage" id="chunk-stage">
+                <!-- Sentence injected here -->
+            </div>
+            <div style="margin-top:30px; color:#aaa;">단어 사이를 클릭하여 의미 단위(/)를 표시하세요.</div>
+            <button class="btn-start" onclick="startSection7()" style="margin-top:30px;">
+                LOGIC CHECK <i class="fas fa-magnifying-glass-arrow-right"></i>
+            </button>
+        </section>
+
+        <!-- Section 7: Evidence Linking -->
+        <section id="section7" class="section">
+            <div class="evidence-layout">
+                <div class="s7-passage-box" id="s7-passage">
+                    <!-- Sentences injected here -->
+                </div>
+                <div class="quiz-panel">
+                    <h3 style="color:var(--ice-blue); margin-bottom:20px;">LOGIC VERIFICATION</h3>
+                    <div id="quiz-container">
+                        <div class="quiz-question" id="s7-question">Q. Loading...</div>
+                        <div id="s7-options">
+                            <!-- Options -->
+                        </div>
+                    </div>
+                    
+                    <div class="evidence-status" id="evidence-status">
+                        <i class="fas fa-link"></i> 선택한 근거 문장이 없습니다.<br>
+                        (왼쪽 본문에서 정답의 근거를 클릭하세요)
+                    </div>
+
+                    <button class="btn-start" onclick="submitQuiz()" id="s7-submit-btn" style="margin-top:20px; font-size:1rem; padding:12px; width:100%; justify-content:center; opacity:0.5; pointer-events:none;">
+                        VERIFY <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8: Final Report -->
+        <section id="section8" class="section">
+            <h1 class="mission-title" style="font-size:3rem; margin-bottom:30px;">MISSION DEBRIEF</h1>
+            <div class="report-container">
+                <div class="agent-profile">
+                    <i class="fas fa-user-astronaut" style="font-size:5rem; color:var(--navy-light); margin-bottom:20px;"></i>
+                    <div class="agent-rank">A+</div>
+                    <div class="agent-type" id="agent-type">LOGIC MASTER</div>
+                    <p style="font-size:0.9rem; color:#666; line-height:1.6;">
+                        요원님은 단서를 논리적으로 연결하는 능력이 탁월합니다. 
+                        특히 <strong>증거 찾기(Evidence)</strong>에서 뛰어난 성과를 보였습니다.
+                    </p>
+                </div>
+                <div class="skill-bars">
+                    <div class="skill-item">
+                        <div class="skill-label">
+                            <span><i class="fas fa-eye"></i> OBSERVATION (관찰력)</span>
+                            <span id="score-obs">100%</span>
+                        </div>
+                        <div class="skill-track"><div class="skill-fill" id="bar-obs" style="width:0%; background:#3498db;"></div></div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-label">
+                            <span><i class="fas fa-brain"></i> DECODING (추론력)</span>
+                            <span id="score-dec">100%</span>
+                        </div>
+                        <div class="skill-track"><div class="skill-fill" id="bar-dec" style="width:0%; background:#9b59b6;"></div></div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-label">
+                            <span><i class="fas fa-project-diagram"></i> LOGIC (논리력)</span>
+                            <span id="score-log">100%</span>
+                        </div>
+                        <div class="skill-track"><div class="skill-fill" id="bar-log" style="width:0%; background:#e67e22;"></div></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-start" onclick="alert('Demo Complete! 감사합니다.')" style="margin-top:40px;">
+                FINISH <i class="fas fa-flag-checkered"></i>
+            </button>
+        </section>
+
+        <!-- AI Coach Overlay (Persistent) -->
+        <div class="ai-interface">
+            <div class="ai-bubble">
+                <span id="aiText" class="typing-cursor">시스템 초기화 중...</span>
+            </div>
+            <div class="ai-avatar"><i class="fas fa-robot"></i></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Game State ---
+        const state = {
+            currentSection: 1,
+            collectedClues: [],
+            missionTarget: ['Feet', 'Pouch', 'Huddle'], // Key answers to collect
+            cluePool: [
+                { text: 'Feet', type: 'key', kor: '발 위에 올리기' },
+                { text: 'Sand', type: 'distractor', kor: '모래' },
+                { text: 'Pouch', type: 'key', kor: '육아낭 (주머니)' },
+                { text: 'Sun', type: 'distractor', kor: '태양' },
+                { text: 'Huddle', type: 'key', kor: '허들 (뭉치기)' },
+                { text: 'Fly', type: 'distractor', kor: '날기' },
+                { text: 'Egg', type: 'neutral', kor: '알' },
+                { text: 'Cold', type: 'neutral', kor: '추위' }
+            ],
+            // Section 3 Data
+            vocabContext: [
+                {
+                    sentence: "The father covers the egg with a special <span id='clue1' class='context-clue'>skin fold</span>. He has to be very [TARGET].",
+                    target: "careful",
+                    options: ["careful", "fast", "sleepy"],
+                    clueId: "clue1",
+                    hint: "피부 주름으로 알을 덮고 있는 상황이야. 만약 '빠르게(fast)' 움직이면 알이 떨어지지 않을까?"
+                },
+                {
+                    sentence: "The egg will [TARGET] within minutes if it touches the <span id='clue3' class='context-clue'>icy ground</span>.",
+                    target: "freeze",
+                    options: ["boil", "freeze", "melt"],
+                    clueId: "clue3",
+                    hint: "차가운 얼음 땅(icy ground)에 닿으면 어떻게 될까? 끓을까(boil), 아니면 얼어버릴까(freeze)?"
+                },
+                {
+                    sentence: "Fathers form a tight 'huddle' and share their <span id='clue4' class='context-clue'>body heat</span> to [TARGET] the cold.",
+                    target: "endure",
+                    options: ["enjoy", "endure", "invite"],
+                    clueId: "clue4",
+                    hint: "체온을 나누며 추위와 싸우는 거야. 추위를 '즐기는(enjoy)' 걸까, '견디는(endure)' 걸까?"
+                }
+            ],
+            vocabIndex: 0,
+            // Section 4 Data
+            matchingData: [
+                { id: 'w1', word: 'Endure', match: 'd3' },
+                { id: 'w2', word: 'Freeze', match: 'd1' },
+                { id: 'w3', word: 'Careful', match: 'd2' }
+            ],
+            definitions: [
+                { id: 'd1', text: 'To become solid by cold' },
+                { id: 'd2', text: 'Trying to avoid damaging something' },
+                { id: 'd3', text: 'To suffer something difficult with patience' }
+            ],
+            selectedWord: null,
+            matchesFound: 0,
+            
+            // Section 5 Data
+            passageParagraphs: [
+                {
+                    id: 'p1',
+                    text: "Emperor penguins are the world’s largest penguins. Adult emperor penguins can stand over 1 meter tall. But to grow this tall from an egg, Emperor Penguins need a lot of dedicated work from their parents.",
+                    signals: ["But"],
+                    correctTag: "Intro"
+                },
+                {
+                    id: 'p2',
+                    text: "Every winter, each mother penguin lays just one egg. The mother passes the egg to the father. Then she goes on a long journey to the ocean to find food. The father puts the egg on his feet. He covers it with a special skin fold. This is called a brood pouch. He has to be very careful.",
+                    signals: ["Then"],
+                    correctTag: "Problem"
+                },
+                {
+                    id: 'p3',
+                    text: "The father stands still in the freezing cold for two months until the egg hatches. The egg is kept warm in the brood pouch at about 38 °C. To endure the cold, fathers form a tight 'huddle' and share their body heat. He uses his body fat to survive.",
+                    signals: [],
+                    correctTag: "Solution"
+                },
+                {
+                    id: 'p4',
+                    text: "Finally, the egg hatches. The mother returns with food for the chick. The parents take turns feeding and caring for their chick until it’s big enough to be independent.",
+                    signals: ["Finally"],
+                    correctTag: "Result"
+                }
+            ],
+            foundSignals: 0,
+            taggedParagraphs: 0,
+
+            // Section 6 Data
+            chunkSentence: "The father stands still / in the freezing cold / for two months / until the egg hatches.",
+
+            // Section 7 Data
+            quizData: [
+                {
+                    q: "Why does the father penguin put the egg on his feet?",
+                    options: ["To cook it", "To keep it from freezing", "To hide it from the mother"],
+                    correctIdx: 1,
+                    evidenceId: "s7-2-5", // "The egg will freeze within minutes..."
+                    hint: "얼음 땅에 닿으면 어떻게 된다고 했는지 찾아보세요."
+                },
+                {
+                    q: "How do father penguins endure the extreme cold?",
+                    options: ["They run around", "They eat lots of food", "They form a tight group"],
+                    correctIdx: 2,
+                    evidenceId: "s7-3-3", // "fathers form a tight 'huddle'..."
+                    hint: "추위를 견디기 위해 아빠들이 '뭉친다(huddle)'는 내용이 어디 있을까요?"
+                }
+            ],
+            quizIndex: 0,
+            s7PassageSentences: [
+                { id: "s7-1-1", text: "Emperor penguins are the world’s largest penguins." },
+                { id: "s7-1-2", text: "Adult emperor penguins can stand over 1 meter tall." },
+                { id: "s7-2-1", text: "Every winter, each mother penguin lays just one egg." },
+                { id: "s7-2-4", text: "The father puts the egg on his feet." },
+                { id: "s7-2-5", text: "The egg will freeze within minutes if it touches the icy ground." },
+                { id: "s7-3-3", text: "To endure the cold, fathers form a tight 'huddle' and share their body heat." },
+                { id: "s7-4-1", text: "Finally, the egg hatches." }
+                // Simplified list for demo purposes
+            ],
+            selectedOption: null,
+            selectedEvidence: null,
+            quizScore: 0
+        };
+
+        // --- AI Coach Functions ---
+        const aiTextEl = document.getElementById('aiText');
+
+        function aiSpeak(text, callback) {
+            aiTextEl.innerText = '';
+            aiTextEl.classList.add('typing-cursor');
+            let i = 0;
+            const speed = 30; // 30ms typing speed
+            
+            if (window.aiTypingInterval) clearTimeout(window.aiTypingInterval);
+
+            function type() {
+                if (i < text.length) {
+                    aiTextEl.innerText += text.charAt(i);
+                    i++;
+                    window.aiTypingInterval = setTimeout(type, speed);
+                } else {
+                    aiTextEl.classList.remove('typing-cursor');
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        // --- Section Transitions ---
+        function startMission() {
+            document.getElementById('section1').classList.remove('active');
+            document.getElementById('section2').classList.add('active');
+            aiSpeak("현장을 관찰하세요! 펭귄들이 추위를 피하기 위해 무엇을 하고 있나요? 화면에 떠다니는 '중요 단서'를 클릭해서 수집하세요.", () => {
+                startSimulation();
+            });
+        }
+
+        // --- Section 2: Simulation Logic ---
+        function startSimulation() {
+            createSnow();
+            startClueSpawner();
+        }
+
+        function createSnow() {
+            const canvas = document.getElementById('videoCanvas');
+            setInterval(() => {
+                const flake = document.createElement('div');
+                flake.className = 'snow-particle';
+                flake.style.left = Math.random() * 100 + '%';
+                flake.style.width = flake.style.height = (Math.random() * 5 + 2) + 'px';
+                flake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                canvas.appendChild(flake);
+                
+                // Cleanup
+                setTimeout(() => flake.remove(), 5000);
+            }, 200);
+        }
+
+        function startClueSpawner() {
+            // 시작하자마자 하나 생성
+            spawnClue();
+
+            const spawner = setInterval(() => {
+                if(state.collectedClues.length >= 3) {
+                    clearInterval(spawner);
+                    return;
+                }
+                // 한 번에 1~2개씩 랜덤하게 나오도록 하여 밀도 높임
+                spawnClue();
+                if(Math.random() > 0.5) spawnClue(); 
+
+            }, 800); // 2500ms -> 800ms로 단축 (훨씬 자주 나옴)
+        }
+
+        function spawnClue() {
+            const clueData = state.cluePool[Math.floor(Math.random() * state.cluePool.length)];
+            
+            // Check if already collected
+            if(state.collectedClues.includes(clueData.text)) return;
+
+            const clueEl = document.createElement('div');
+            clueEl.className = 'floating-clue';
+            clueEl.innerText = clueData.text;
+            
+            // Random position
+            clueEl.style.top = (Math.random() * 60 + 10) + '%';
+            
+            // 랜덤 속도 적용 (4~7초) - 기존 8초보다 빠르고 다양하게
+            clueEl.style.animationDuration = (Math.random() * 3 + 4) + 's';
+
+            clueEl.onclick = () => handleClueClick(clueEl, clueData);
+            
+            document.getElementById('videoCanvas').appendChild(clueEl);
+
+            // Cleanup on animation end
+            clueEl.addEventListener('animationend', () => {
+                if(clueEl.parentNode) clueEl.remove();
+            });
+        }
+
+        function handleClueClick(el, data) {
+            if (data.type === 'key') {
+                el.classList.add('caught');
+                addInventory(data.text);
+                state.collectedClues.push(data.text);
+                aiSpeak(`${data.text}: 데이터 확보 완료!`);
+
+                if(state.collectedClues.length === 3) {
+                    setTimeout(finishSection2, 2000);
+                }
+
+            } else if (data.type === 'distractor') {
+                el.classList.add('distractor');
+                aiSpeak(`'${data.text}'는 생존 비결이 아닙니다.`);
+            } else {
+                aiSpeak(`'${data.text}' 말고 구체적인 행동을 찾으세요.`);
+                el.style.opacity = '0.5';
+            }
+        }
+
+        function addInventory(text) {
+            const slots = document.querySelectorAll('.inv-slot');
+            for (let slot of slots) {
+                if (!slot.classList.contains('filled')) {
+                    slot.innerText = text;
+                    slot.classList.add('filled');
+                    break;
+                }
+            }
+        }
+
+        function finishSection2() {
+            aiSpeak("훌륭합니다! 3가지 생존 가설을 확보했습니다. 이제 데이터를 복구하러 갑시다.", () => {
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'btn-start';
+                nextBtn.innerHTML = '데이터 복구 <i class="fas fa-terminal"></i>';
+                nextBtn.style.position = 'absolute';
+                nextBtn.style.bottom = '50%';
+                nextBtn.style.left = '50%';
+                nextBtn.style.transform = 'translate(-50%, 50%)';
+                nextBtn.onclick = () => startSection3();
+                document.getElementById('videoCanvas').appendChild(nextBtn);
+            });
+        }
+
+        // --- Section 3: Context Decoding Logic ---
+        function startSection3() {
+            document.getElementById('section2').classList.remove('active');
+            document.getElementById('section3').classList.add('active');
+            state.vocabIndex = 0;
+            loadVocabCard(0);
+            aiSpeak("문맥(Context)을 보고 빈칸에 들어갈 단어를 복구하세요.");
+        }
+
+        function loadVocabCard(index) {
+            const data = state.vocabContext[index];
+            document.getElementById('decode-progress').innerText = `${index + 1} / ${state.vocabContext.length}`;
+            const displaySentence = data.sentence.replace('[TARGET]', '<span class="hidden-word-slot">???</span>');
+            document.getElementById('sentence-display').innerHTML = displaySentence;
+
+            const optsContainer = document.getElementById('options-display');
+            optsContainer.innerHTML = '';
+            const shuffled = [...data.options].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkContextAnswer(btn, opt, data);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function checkContextAnswer(btn, choice, data) {
+            if (btn.classList.contains('correct') || btn.classList.contains('wrong')) return;
+            document.querySelectorAll('.context-clue').forEach(el => el.classList.remove('highlight'));
+
+            if (choice === data.target) {
+                btn.classList.add('correct');
+                document.querySelectorAll('.option-btn').forEach(b => b.style.pointerEvents = 'none');
+                const slot = document.querySelector('.hidden-word-slot');
+                if(slot) {
+                    slot.innerText = choice;
+                    slot.style.borderBottomColor = 'var(--tech-green)';
+                    slot.style.color = 'var(--tech-green)';
+                }
+                
+                aiSpeak("복구 성공!", () => {
+                    setTimeout(() => {
+                        state.vocabIndex++;
+                        if (state.vocabIndex < state.vocabContext.length) {
+                            loadVocabCard(state.vocabIndex);
+                        } else {
+                            startSection4();
+                        }
+                    }, 1000);
+                });
+            } else {
+                btn.classList.add('wrong');
+                const clueEl = document.getElementById(data.clueId);
+                if(clueEl) clueEl.classList.add('highlight');
+                aiSpeak(`오류! 힌트 단어('${clueEl ? clueEl.innerText : 'Hint'}')를 다시 보세요.`);
+            }
+        }
+
+        // --- Section 4: Data Matching Logic ---
+        function startSection4() {
+            document.getElementById('section3').classList.remove('active');
+            document.getElementById('section4').classList.add('active');
+            renderMatchingGame();
+            aiSpeak("단어와 정의를 연결하세요.");
+        }
+
+        function renderMatchingGame() {
+            const colWords = document.getElementById('col-words');
+            const colDefs = document.getElementById('col-defs');
+            
+            const shuffledWords = [...state.matchingData].sort(() => Math.random() - 0.5);
+            const shuffledDefs = [...state.definitions].sort(() => Math.random() - 0.5);
+
+            shuffledWords.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'match-item';
+                div.innerText = item.word;
+                div.dataset.id = item.id;
+                div.dataset.match = item.match;
+                div.onclick = () => selectWord(div);
+                colWords.appendChild(div);
+            });
+
+            shuffledDefs.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'match-item';
+                div.innerText = item.text;
+                div.dataset.id = item.id;
+                div.onclick = () => selectDef(div);
+                colDefs.appendChild(div);
+            });
+        }
+
+        function selectWord(el) {
+            if (el.classList.contains('matched')) return;
+            document.querySelectorAll('#col-words .match-item').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+            state.selectedWord = el;
+            const selectedDef = document.querySelector('#col-defs .match-item.selected');
+            if (selectedDef) checkMatch(el, selectedDef);
+        }
+
+        function selectDef(el) {
+            if (el.classList.contains('matched')) return;
+            document.querySelectorAll('#col-defs .match-item').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+            if (state.selectedWord) checkMatch(state.selectedWord, el);
+        }
+
+        function checkMatch(wordEl, defEl) {
+            if (wordEl.dataset.match === defEl.dataset.id) {
+                wordEl.classList.remove('selected');
+                defEl.classList.remove('selected');
+                wordEl.classList.add('matched');
+                defEl.classList.add('matched');
+                wordEl.innerHTML = `<i class="fas fa-check"></i> ${wordEl.innerText}`;
+                
+                aiSpeak("연결 확인.");
+                state.selectedWord = null;
+                state.matchesFound++;
+
+                if (state.matchesFound === state.matchingData.length) {
+                    setTimeout(() => {
+                        startSection5();
+                    }, 1000);
+                }
+            } else {
+                aiSpeak("불일치! 다시 시도하세요.");
+                setTimeout(() => {
+                    wordEl.classList.remove('selected');
+                    defEl.classList.remove('selected');
+                    state.selectedWord = null;
+                }, 500);
+            }
+        }
+
+        // --- Section 5: Macro Reading Logic ---
+        function startSection5() {
+            document.getElementById('section4').classList.remove('active');
+            document.getElementById('section5').classList.add('active');
+            renderPassage();
+            aiSpeak("본문 독해를 시작합니다. 우측의 도구를 사용하여 '신호어(Signal)'를 찾고 각 문단의 '역할'을 태그하세요.");
+        }
+
+        function renderPassage() {
+            const container = document.getElementById('passage-container');
+            container.innerHTML = '';
+            state.passageParagraphs.forEach((p, idx) => {
+                // Prepare Text with clickable words
+                const words = p.text.split(' ').map(w => {
+                    // Simple regex to split punctuation
+                    const cleanWord = w.replace(/[^a-zA-Z]/g, '');
+                    return `<span class="interactive-word" onclick="checkSignal(this, '${cleanWord}', '${p.id}')">${w}</span>`;
+                }).join(' ');
+
+                const pDiv = document.createElement('div');
+                pDiv.className = 'paragraph-container';
+                pDiv.innerHTML = `
+                    <p>${words}</p>
+                    <div class="paragraph-tag-zone">
+                        <button class="tag-btn" onclick="tagParagraph('${p.id}', 'Intro', this)">Intro</button>
+                        <button class="tag-btn" onclick="tagParagraph('${p.id}', 'Problem', this)">Problem</button>
+                        <button class="tag-btn" onclick="tagParagraph('${p.id}', 'Solution', this)">Solution</button>
+                        <button class="tag-btn" onclick="tagParagraph('${p.id}', 'Result', this)">Result</button>
+                    </div>
+                `;
+                container.appendChild(pDiv);
+            });
+        }
+
+        function checkSignal(el, word, pid) {
+            if (el.classList.contains('signal-found')) return;
+            
+            const pData = state.passageParagraphs.find(p => p.id === pid);
+            // Check if this word (case insensitive) is in the signals list
+            if (pData && pData.signals.some(s => s.toLowerCase() === word.toLowerCase())) {
+                el.classList.add('signal-found');
+                state.foundSignals++;
+                document.getElementById('signal-count').innerText = state.foundSignals;
+                aiSpeak(`신호어 발견! '${word}'는 글의 흐름을 보여줍니다.`);
+                checkS5Completion();
+            }
+        }
+
+        function tagParagraph(pid, tag, btn) {
+            // Reset buttons in this zone
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+            
+            const pData = state.passageParagraphs.find(p => p.id === pid);
+            if (pData.correctTag === tag) {
+                btn.classList.add('active');
+                state.taggedParagraphs++;
+                document.getElementById('tag-count').innerText = state.taggedParagraphs;
+                aiSpeak(`정확한 분석입니다! 이 문단은 ${tag} 역할을 합니다.`);
+                checkS5Completion();
+            } else {
+                aiSpeak(`음, 다시 생각해보세요. 이 문단이 정말 ${tag}일까요?`);
+                btn.style.background = '#ffcfcf';
+                setTimeout(() => btn.style.background = '#eee', 500);
+            }
+        }
+
+        function checkS5Completion() {
+            // Logic: 3 signals + 4 tags
+            if (state.foundSignals >= 3 && state.taggedParagraphs >= 4) {
+                const btn = document.getElementById('s5-finish-btn');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.classList.add('btn-start'); // Re-apply style just in case
+                aiSpeak("모든 구조 분석 완료! 이제 마지막 심층 분석(Deep Dive)으로 이동합니다.");
+            }
+        }
+
+        function finishSection5() {
+            startSection6();
+        }
+
+        // --- Section 6: Micro Reading (Chunking) Logic ---
+        function startSection6() {
+            document.getElementById('section5').classList.remove('active');
+            document.getElementById('section6').classList.add('active');
+            renderChunkingTask();
+            aiSpeak("가장 복잡한 문장입니다. 의미 단위가 끊어지는 곳(Slash)을 클릭하여 문장을 분해하세요.");
+        }
+
+        function renderChunkingTask() {
+            // "The father stands still / in the freezing cold / for two months / until the egg hatches."
+            const raw = "The father stands still in the freezing cold for two months until the egg hatches.";
+            const answerBreaks = ["still", "cold", "months"]; // Words after which a break occurs
+
+            const container = document.getElementById('chunk-stage');
+            const words = raw.split(' ');
+            
+            container.innerHTML = '';
+            words.forEach((w, i) => {
+                const span = document.createElement('span');
+                span.className = 'chunk-word-wrapper';
+                span.innerHTML = `${w}`;
+                
+                if (i < words.length - 1) { // Don't add trigger after last word
+                    const trigger = document.createElement('div');
+                    trigger.className = 'chunk-trigger';
+                    trigger.onclick = () => toggleSlash(trigger, w, answerBreaks);
+                    span.appendChild(trigger);
+                }
+                container.appendChild(span);
+            });
+        }
+
+        function toggleSlash(trigger, prevWord, answers) {
+            // Clean word for comparison (remove punctuation if needed, but here simple split works)
+            if (answers.includes(prevWord)) {
+                if (!trigger.hasAttribute('data-active')) {
+                    const slash = document.createElement('span');
+                    slash.className = 'slash-mark';
+                    slash.innerText = '/';
+                    trigger.parentElement.after(slash); // Insert visually after the wrapper
+                    trigger.setAttribute('data-active', 'true');
+                    trigger.style.pointerEvents = 'none'; // Lock it
+                    aiSpeak("Good cut! 의미가 자연스럽게 끊깁니다.");
+                }
+            } else {
+                aiSpeak("거기서 끊으면 말이 어색해집니다. 전치사나 접속사 앞을 찾아보세요.");
+            }
+        }
+
+        // --- Section 7: Evidence Linking Logic ---
+        function startSection7() {
+            document.getElementById('section6').classList.remove('active');
+            document.getElementById('section7').classList.add('active');
+            state.quizIndex = 0;
+            state.quizScore = 0;
+            renderSection7Passage();
+            loadQuiz(0);
+            aiSpeak("논리 검증 단계입니다. 정답을 선택하고, 그 이유가 되는 '증거 문장'을 본문에서 찾아 연결하세요.");
+        }
+
+        function renderSection7Passage() {
+            const container = document.getElementById('s7-passage');
+            container.innerHTML = '';
+            state.s7PassageSentences.forEach(s => {
+                const span = document.createElement('span');
+                span.className = 'selectable-sentence';
+                span.innerText = s.text + " ";
+                span.dataset.id = s.id;
+                span.onclick = () => selectEvidence(span);
+                container.appendChild(span);
+            });
+        }
+
+        function loadQuiz(idx) {
+            if (idx >= state.quizData.length) {
+                // All done
+                startSection8();
+                return;
+            }
+            const data = state.quizData[idx];
+            document.getElementById('s7-question').innerText = `Q${idx+1}. ${data.q}`;
+            
+            const optsContainer = document.getElementById('s7-options');
+            optsContainer.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'quiz-option';
+                div.innerText = opt;
+                div.onclick = () => selectOption(div, i);
+                optsContainer.appendChild(div);
+            });
+
+            // Reset selection state
+            state.selectedOption = null;
+            state.selectedEvidence = null;
+            updateSubmitBtn();
+            document.getElementById('evidence-status').innerHTML = '<i class="fas fa-link"></i> 선택한 근거 문장이 없습니다.';
+            document.getElementById('evidence-status').classList.remove('active');
+        }
+
+        function selectOption(el, idx) {
+            document.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            state.selectedOption = idx;
+            updateSubmitBtn();
+        }
+
+        function selectEvidence(el) {
+            document.querySelectorAll('.selectable-sentence').forEach(s => s.classList.remove('selected-evidence'));
+            el.classList.add('selected-evidence');
+            state.selectedEvidence = el.dataset.id;
+            
+            const status = document.getElementById('evidence-status');
+            status.innerHTML = `<i class="fas fa-check-circle"></i> 근거 선택됨: "${el.innerText.substring(0, 20)}..."`;
+            status.classList.add('active');
+            updateSubmitBtn();
+        }
+
+        function updateSubmitBtn() {
+            const btn = document.getElementById('s7-submit-btn');
+            if (state.selectedOption !== null && state.selectedEvidence !== null) {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            } else {
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+            }
+        }
+
+        function submitQuiz() {
+            const currentQ = state.quizData[state.quizIndex];
+            
+            const isOptCorrect = (state.selectedOption === currentQ.correctIdx);
+            const isEvCorrect = (state.selectedEvidence === currentQ.evidenceId);
+
+            if (isOptCorrect && isEvCorrect) {
+                aiSpeak("정답 및 증거 일치! 논리적으로 완벽합니다.", () => {
+                    state.quizScore++;
+                    state.quizIndex++;
+                    setTimeout(() => loadQuiz(state.quizIndex), 1500);
+                });
+            } else if (isOptCorrect && !isEvCorrect) {
+                aiSpeak("정답은 맞았지만, 증거가 틀렸습니다. 심증은 있는데 물증이 없군요. 다시 찾으세요.");
+            } else if (!isOptCorrect) {
+                aiSpeak("답이 틀렸습니다. 문제를 다시 읽어보세요.");
+            }
+        }
+
+        // --- Section 8: Final Report Logic ---
+        function startSection8() {
+            document.getElementById('section7').classList.remove('active');
+            document.getElementById('section8').classList.add('active');
+            aiSpeak("모든 미션 완료. 요원님의 학습 데이터를 분석하여 리포트를 생성했습니다.");
+            
+            // Animate Bars
+            setTimeout(() => {
+                document.getElementById('bar-obs').style.width = '100%'; // Demo values
+                document.getElementById('bar-dec').style.width = '85%';
+                document.getElementById('bar-log').style.width = '90%';
+                
+                document.getElementById('score-obs').innerText = '100%';
+                document.getElementById('score-dec').innerText = '85%';
+                document.getElementById('score-log').innerText = '90%';
+            }, 500);
+        }
+
+        // Init
+        window.onload = () => {
+            aiSpeak("접속을 환영합니다, 요원님. 오늘의 연구 대상은 '황제펭귄'입니다.");
+        }
+
+    </script>
+</body>
+</html>
