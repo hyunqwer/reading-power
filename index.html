@@ -767,6 +767,9 @@
             </div>
         </div>
 
+        <!-- [Added] Skip Button for Demonstration -->
+        <button class="next-btn" onclick="goToSection(5)" style="z-index: 200; background: var(--navy-blue);">Skip Game <i class="fas fa-forward"></i></button>
+
         <div id="s4-result-screen" class="report-screen">
             <h1 class="corner-title" style="color: var(--white);">Game Report</h1>
             <div class="instruction" style="color: var(--white); border-color:white;">Check the missing words.</div>
@@ -1085,6 +1088,10 @@
         // --- Navigation Controller ---
         function goToSection(sectionNum) {
             stopAllMedia();
+            
+            // [Added] Stop game timer if leaving section 4
+            if (typeof s4_timer !== 'undefined') clearInterval(s4_timer);
+
             document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active-section'));
             document.getElementById('section' + sectionNum).classList.add('active-section');
             if (sectionNum === 4) { s4_initGame(); }
